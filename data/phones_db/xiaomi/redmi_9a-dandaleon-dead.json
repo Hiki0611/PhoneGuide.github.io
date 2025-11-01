@@ -1,0 +1,9 @@
+{
+  "brand": "Xiaomi",
+  "series": "Redmi 9/A",
+  "model": "Redmi 9A",
+  "codename": "dandaleon",
+  "cpu": "MediaTek Helio G25",
+  "issue": "dead",
+  "instructions": "## Инструкция по восстановлению Redmi 9A (DEAD)\n\n1.  **Подготовка:** Скачайте последнюю прошивку Fastboot (Global Stable) и распакуйте ее.\n2.  **Инструмент:** Используйте утилиту SP Flash Tool или аналогичную (Xiaomi Flash Tool не подходит).\n3.  **Bypass Anti-Relock (ОБЯЗАТЕЛЬНО):** Для предотвращения повторной блокировки, необходимо использовать модифицированные файлы DA и auth.\n4.  **Процедура:**\n    * Откройте SP Flash Tool.\n    * Загрузите Scatter-файл из распакованной прошивки.\n    * Выберите режим 'Download Only' (или 'Firmware Upgrade' для гарантии).\n    * Подключите телефон к компьютеру, удерживая обе кнопки громкости (Volume Up + Volume Down).\n    * После обнаружения порта COM, нажмите кнопку 'Download'.\n\n**Важно:** Убедитесь, что установлены все драйверы MediaTek Preloader. Если телефон не определяется, попробуйте 'Test Point' (замыкание контактов на плате)."
+}
