@@ -1,0 +1,26 @@
+[
+  {
+    "brand": "realme",
+    "series": "realme Note 50 серия",
+    "model": "realme Note 50",
+    "codename": "rmx3934",
+    "cpu": "QCom",
+    "details_path": "data/phones_db/realme/realme_note_50-rmx3934-dead.json"
+  },
+  {
+    "brand": "samsung",
+    "series": "A-series",
+    "model": "SM-A15",
+    "codename": "a515f",
+    "cpu": "QCom",
+    "details_path": "data/phones_db/samsung/sm_a_15-a515f-imei.json"
+  },
+  {
+    "brand": "xiaomi",
+    "series": "Redmi 9 серия",
+    "model": "Redmi 9A",
+    "codename": "dandaleon",
+    "cpu": "MTK",
+    "details_path": "data/phones_db/xiaomi/redmi_9a-dandaleon-frp.json"
+  }
+]

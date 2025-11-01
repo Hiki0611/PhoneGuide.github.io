@@ -1,0 +1,7 @@
+{
+  "brand": "xiaomi",
+  "model": "Redmi 9A",
+  "codename": "dandaleon",
+  "issue": "frp",
+  "instructions": "1) Включить ADB; 2) Использовать пакет обхода FRP; 3) Следовать шагам скрипта..."
+}

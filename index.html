@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PhoneGuide — Инструкции по телефонам</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#071014" />
+</head>
+<body>
+
+  <!-- background decorative layers (kept for style) -->
+  <div class="bg-gradient"></div>
+  <div class="float-shape s1"></div>
+  <div class="float-shape s2"></div>
+
+  <!-- canvas for particles (script creates #bgCanvas) -->
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <button id="backBtn" class="btn hidden" aria-label="Назад">←</button>
+    <h1 class="title">PhoneGuide</h1>
+    <input id="search" type="search" placeholder="🔍 Поиск модели или codename" autocomplete="off" />
+  </header>
+
+  <!-- Brand filters (chips) -->
+  <div id="brandFilters" class="brand-filters" aria-hidden="false" role="toolbar" aria-label="Фильтр по брендам">
+    <!-- chips будут добавляться script.js -->
+  </div>
+
+  <!-- APP -->
+  <main id="app" role="main">
+    <div id="list" class="list" aria-live="polite"></div>
+
+    <section id="detail" class="detail hidden" aria-hidden="true"></section>
+  </main>
+
+  <!-- FOOTER: nav + contact -->
+  <footer class="footer">
+    <div class="nav">
+      <button class="nav-btn active" aria-pressed="true">Главная</button>
+      <button class="nav-btn">Избранное</button>
+      <button class="nav-btn" id="aboutBtn">О приложении</button>
+    </div>
+
+    <div class="footer-info">
+      <div class="contact">
+        <span>Контакт (TG):</span>
+        <a href="https://t.me/ill_hack_you" target="_blank" rel="noopener noreferrer" id="tgLink">@ill_hack_you</a>
+      </div>
+      <div class="copyright">© PhoneGuide</div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+
+  <script>
+    // small UX: fade in
+    document.documentElement.style.opacity = 0;
+    window.addEventListener('load', () => {
+      document.documentElement.style.transition = 'opacity 360ms ease';
+      document.documentElement.style.opacity = 1;
+    });
+
+    // about button
+    document.getElementById('aboutBtn').addEventListener('click', () => {
+      const detail = document.getElementById('detail');
+      const list = document.getElementById('list');
+      list.classList.add('hidden'); detail.classList.remove('hidden');
+      document.getElementById('backBtn').classList.remove('hidden');
+      detail.innerHTML = `
+        <h2 class="glow-title">О приложении — PhoneGuide</h2>
+        <p>PhoneGuide — набор инструкций и процедур для смартфонов (IMEI / FRP / DEAD). Контент — учебный/информационный. Используйте с осторожностью.</p>
+        <p>Связь в Telegram: <a href="https://t.me/ill_hack_you" target="_blank">@ill_hack_you</a></p>
+      `;
+    });
+
+    // Esc = back
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const back = document.getElementById('backBtn');
+        if (!back.classList.contains('hidden')) back.click();
+      }
+    });
+  </script>
+
+</body>
+</html>

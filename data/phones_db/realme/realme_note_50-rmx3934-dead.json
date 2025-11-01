@@ -1,0 +1,7 @@
+{
+  "brand": "realme",
+  "model": "realme Note 50",
+  "codename": "rmx3934",
+  "issue": "dead",
+  "instructions": "1) Проверить питание; 2) Замерить напряжение на плате; 3) Перепрошивка через TestPoint..."
+}
