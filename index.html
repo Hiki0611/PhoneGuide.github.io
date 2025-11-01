@@ -24,7 +24,6 @@
 
   <main id="app" role="main">
     <div id="list" class="list" aria-live="polite"></div>
-
     <section id="detail" class="detail hidden" aria-hidden="true"></section>
   </main>
 
@@ -54,18 +53,24 @@
     });
 
     // about button
-    document.getElementById('aboutBtn').addEventListener('click', () => {
+    document.getElementById('aboutBtn').addEventListener('click', (e) => {
       const detail = document.getElementById('detail');
       const list = document.getElementById('list');
-      // Добавлена логика для кнопки "Главная"
+      
+      // Управление активными кнопками в футере
+      e.currentTarget.classList.add('active');
       document.getElementById('homeBtn')?.classList.remove('active');
-      list.classList.add('hidden'); detail.classList.remove('hidden');
+      
+      list.classList.add('hidden'); 
+      detail.classList.remove('hidden');
       document.getElementById('backBtn').classList.remove('hidden');
       detail.innerHTML = `
         <h2 class="glow-title">О приложении — PhoneGuide</h2>
         <p>PhoneGuide — набор инструкций и процедур для смартфонов (IMEI / FRP / DEAD). Контент — учебный/информационный. Используйте с осторожностью.</p>
         <p>Связь в Telegram: <a href="https://t.me/ill_hack_you" target="_blank">@ill_hack_you</a></p>
       `;
+      // Хеш для about
+      history.pushState({ view: 'about' }, '', '#about');
     });
 
     // Esc = back

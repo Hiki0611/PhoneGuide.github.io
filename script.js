@@ -1,7 +1,7 @@
 // site/script.js
 // Показывает ТОЛЬКО существующие категории (IMEI/FRP/DEAD) в карточке модели.
 // Fetch деталей только при клике на существующую кнопку.
-// Сохраняет: brand filters, aggregation, particles, cache, history, TG copy.
+// Зависит от генерации list.json скриптом upload.py
 
 (() => {
   'use strict';
@@ -99,9 +99,9 @@
      Core app
      --------------------------- */
 
-  // const LIST_PATH = 'phone_list.json'; // УДАЛЕНО
   const BACK_BTN = document.getElementById('backBtn');
-  const HOME_BTN = document.getElementById('homeBtn'); // НОВАЯ: Кнопка Главная
+  const HOME_BTN = document.getElementById('homeBtn'); 
+  const ABOUT_BTN = document.getElementById('aboutBtn'); 
   const LIST_EL = document.getElementById('list');
   const DETAIL_EL = document.getElementById('detail');
   const SEARCH = document.getElementById('search');
@@ -110,8 +110,8 @@
   const TG_HANDLE = '@ill_hack_you';
   const STORAGE_KEY = 'phoneguide_details_cache_v1';
 
-  let rawPhones = []; // Теперь содержит массив путей к файлам инструкций
-  let aggregatedByBrand = {}; // brand -> [modelObjects]
+  let rawPhones = []; 
+  let aggregatedByBrand = {};
   let activeBrand = null;
   const detailsCache = new Map();
 
@@ -138,9 +138,8 @@
   }
   function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
-  // NEW: parse filename to detect model, codename & issue from path
+  // LOGIC: parse filename to detect model, codename & issue from path
   // Expected path format: data/phones_db/[brand]/[model]-[codename]-[issue].json
-  // E.g. data/phones_db/realme/realme_note_50-rmx3934-dead.json
   function parseDetailsPath(path) {
     if (!path) return {};
     const parts = path.split('/');
@@ -173,7 +172,7 @@
     return { brand: brand, model: file.replace(/_/g, ' ').replace(/\.json$/, ''), codename: '', issue: '' };
   }
 
-  // NEW: Aggregate raw file paths into models with .issues map
+  // LOGIC: Aggregate raw file paths into models with .issues map
   function aggregatePhones(paths) {
     aggregatedByBrand = {};
     paths.forEach(path => {
@@ -194,7 +193,7 @@
       if (!aggregatedByBrand[brand][key]) {
         aggregatedByBrand[brand][key] = {
           brand, model, codename,
-          cpu: 'Unknown', // CPU must be read from instruction file later or added here if available
+          cpu: 'Unknown', 
           series: '',
           issues: {}
         };
@@ -252,8 +251,13 @@
 
   // Render list: only available issue buttons are shown (no muted placeholders)
   function renderList(filter = '') {
-    DETAIL_EL.classList.add('hidden'); BACK_BTN.classList.add('hidden'); LIST_EL.classList.remove('hidden');
-    HOME_BTN.classList.add('active'); // Активировать кнопку Главная
+    DETAIL_EL.classList.add('hidden'); 
+    BACK_BTN.classList.add('hidden'); 
+    LIST_EL.classList.remove('hidden');
+    
+    HOME_BTN?.classList.add('active'); 
+    ABOUT_BTN?.classList.remove('active'); 
+    
     LIST_EL.innerHTML = '';
     const q = String(filter || '').trim().toLowerCase();
 
@@ -276,15 +280,13 @@
       const list = document.createElement('div'); list.className = 'list';
 
       visibleModels.forEach(m => {
-        // skip models without any issues (nothing to show)
         const availableIssues = Object.keys(m.issues || {});
         if (!availableIssues || availableIssues.length === 0) return;
 
         anyItems = true;
         const item = document.createElement('div'); item.className = 'item';
-        // Note: CPU is Unknown here unless pre-determined, it will be updated when instruction is fetched.
         const metaHtml = `<div class="meta"><div class="model">${escapeHtml(m.model)}</div><div class="codename">${escapeHtml(m.codename || '')} · ${escapeHtml(m.cpu || 'CPU')}</div></div>`;
-        // build only existing issue buttons
+        
         let issuesHtml = '<div style="display:flex;gap:8px;align-items:center">';
         for (const issue of ['imei','frp','dead']) {
           const path = m.issues[issue];
@@ -298,7 +300,7 @@
 
         // click on whole item opens model panel (shows only existing categories)
         item.addEventListener('click', (ev) => {
-          if (ev.target.closest('.issue-pill')) return; // let issue button handler run
+          if (ev.target.closest('.issue-pill')) return; 
           openModelPanel(m);
         });
 
@@ -327,13 +329,18 @@
 
   // open model panel: shows header + only existing category buttons
   function openModelPanel(model) {
-    const state = { view: 'model', modelKey: `${model.brand}||${model.model}||${model.codename}` };
-    history.pushState(state, '', `#model-${encodeURIComponent(state.modelKey)}`);
-    LIST_EL.classList.add('hidden'); DETAIL_EL.classList.remove('hidden'); BACK_BTN.classList.remove('hidden');
-    HOME_BTN.classList.remove('active'); // Деактивировать кнопку Главная
+    const modelKey = `${model.brand}||${model.model}||${model.codename}`;
+    const state = { view: 'model', modelKey };
+    history.pushState(state, '', `#model-${encodeURIComponent(modelKey)}`);
+    
+    LIST_EL.classList.add('hidden'); 
+    DETAIL_EL.classList.remove('hidden'); 
+    BACK_BTN.classList.remove('hidden');
+    
+    HOME_BTN?.classList.remove('active'); 
+    ABOUT_BTN?.classList.remove('active'); 
 
-    const available = Object.keys(model.issues || {});
-    const availableCount = available.length;
+    const availableCount = Object.keys(model.issues || {}).length;
     DETAIL_EL.innerHTML = `
       <h2>${escapeHtml(model.brand)} — ${escapeHtml(model.model)}</h2>
       <div class="meta">codename: ${escapeHtml(model.codename || '')} · cpu: ${escapeHtml(model.cpu || 'CPU')}</div>
@@ -375,13 +382,13 @@
   // open specific issue detail (fetch on demand)
   async function openIssueDetail(details_path, model, issue) {
     DETAIL_EL.innerHTML = `<div class="center">Загрузка инструкции ${issue.toUpperCase()}…</div>`;
-    HOME_BTN.classList.remove('active'); // Деактивировать кнопку Главная
+    HOME_BTN?.classList.remove('active'); 
+    ABOUT_BTN?.classList.remove('active');
 
     try {
       const cacheKey = details_path;
       if (detailsCache.has(cacheKey)) {
         const cachedDetail = detailsCache.get(cacheKey);
-        // Ensure model context is updated from cache/fetch if needed
         model.cpu = cachedDetail.cpu || model.cpu;
         renderDetail(cachedDetail, model, issue);
         return;
@@ -391,12 +398,11 @@
         brand: data.brand || model.brand,
         model: data.model || model.model,
         codename: data.codename || model.codename,
-        cpu: data.cpu || model.cpu || 'Unknown', // Get CPU from the actual instruction file
+        cpu: data.cpu || model.cpu || 'Unknown', 
         issue: data.issue || issue,
         instructions: data.instructions || data.text || 'Инструкции не найдены',
         raw: data
       };
-      // Update the main model object's CPU from the fetched detail if available
       model.cpu = detail.cpu;
       detailsCache.set(cacheKey, detail);
       persistCache();
@@ -411,7 +417,6 @@
     try {
       const toStore = Object.create(null);
       for (const [k,v] of detailsCache.entries()) {
-        // Only store necessary fields to keep cache small
         toStore[k] = { brand:v.brand, model:v.model, codename:v.codename, cpu:v.cpu, issue:v.issue, instructions:v.instructions };
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
@@ -419,6 +424,11 @@
   }
 
   function renderDetail(detail, model, issue) {
+    // Обновляем хэш истории для прямого доступа к инструкции
+    const modelKey = `${model.brand}||${model.model}||${model.codename}`;
+    const state = { view: 'detail', modelKey, details_path: detail.details_path || model.issues[issue] };
+    history.pushState(state, '', `#${state.details_path}`);
+    
     const safeInstructions = (detail.instructions || '').replace(/\n/g, '<br>');
     DETAIL_EL.innerHTML = `
       <h2>${escapeHtml(detail.brand)} — ${escapeHtml(detail.model)}</h2>
@@ -429,23 +439,36 @@
         <a class="nav-btn small" href="https://t.me/ill_hack_you" target="_blank" rel="noopener noreferrer">Открыть @ill_hack_you</a>
       </div>
     `;
-    document.getElementById(TG_COPY_BTN_ID)?.addEventListener('click', async () => { try { await navigator.clipboard.writeText(TG_HANDLE); const b = document.getElementById(TG_COPY_BTN_ID); b.textContent='Скопировано!'; setTimeout(()=> b.textContent='Копировать TG',1400); } catch(e){ window.prompt('Скопируй вручную:', TG_HANDLE); } });
+    document.getElementById(TG_COPY_BTN_ID)?.addEventListener('click', async () => { 
+        try { 
+            await navigator.clipboard.writeText(TG_HANDLE); 
+            const b = document.getElementById(TG_COPY_BTN_ID); 
+            b.textContent='Скопировано!'; 
+            setTimeout(()=> b.textContent='Копировать TG',1400); 
+        } catch(e){ 
+            window.prompt('Скопируй вручную:', TG_HANDLE); 
+        } 
+    });
   }
 
-  // NEW: history handling & Home button logic
+  // history handling & Home button logic
   function goToHome() {
     DETAIL_EL.classList.add('hidden');
     BACK_BTN.classList.add('hidden');
     LIST_EL.classList.remove('hidden');
-    HOME_BTN.classList.add('active'); // Активировать кнопку Главная
-    history.pushState({ view: 'list' }, '', window.location.pathname); // Очистить хэш и вернуться в состояние списка
-    renderList(SEARCH.value); // Перерисовать список, чтобы убедиться, что все фильтры применены
+    HOME_BTN?.classList.add('active'); 
+    ABOUT_BTN?.classList.remove('active'); 
+    history.pushState({ view: 'list' }, '', window.location.pathname); 
+    renderList(SEARCH.value); 
   }
 
   window.addEventListener('popstate', (ev) => {
     const st = ev.state;
     if (!st || st.view === 'list') {
-      goToHome(); // Используем goToHome для возврата
+      goToHome(); 
+    } else if (st.view === 'about') {
+       // Повторно активируем логику "О приложении" из index.html
+       ABOUT_BTN.click(); 
     } else if (st.view === 'model') {
       const key = st.modelKey;
       for (const b in aggregatedByBrand) {
@@ -453,45 +476,75 @@
         if (found) { openModelPanel(found); return; }
       }
       goToHome();
+    } else if (st.view === 'detail') {
+        const path = st.details_path;
+        // Находим агрегированную модель, чтобы иметь контекст (brand/model/cpu)
+        const parsed = parseDetailsPath(path);
+        const aggKey = `${parsed.brand}||${parsed.model}||${parsed.codename}`;
+        const agg = aggregatedByBrand[parsed.brand]?.find(x => `${x.brand}||${x.model}||${parsed.codename}` === aggKey);
+        
+        openIssueDetail(path, agg || parsed, parsed.issue || '');
     } else {
       goToHome();
     }
   });
+  
+  // Hash support on first load (to allow direct links)
+  function handleInitialHash() {
+      if (!location.hash) return;
+      const hash = decodeURIComponent(location.hash.slice(1));
+
+      if (hash === 'about') {
+          ABOUT_BTN.click(); // Имитируем клик по About
+      } else if (hash.startsWith('model-')) {
+          const key = hash.replace(/^model-/, '');
+          for (const b in aggregatedByBrand) {
+            const found = aggregatedByBrand[b].find(x => `${x.brand}||${x.model}||x.codename` === key);
+            if (found) { openModelPanel(found); return; }
+          }
+      } else if (hash.startsWith('data/')) {
+          const parsed = parseDetailsPath(hash);
+          const aggKey = `${parsed.brand}||${parsed.model}||${parsed.codename}`;
+          const agg = aggregatedByBrand[parsed.brand]?.find(x => `${x.brand}||${x.model}||${parsed.codename}` === aggKey);
+          
+          openIssueDetail(hash, agg || parsed, parsed.issue || '');
+      }
+  }
+
 
   BACK_BTN.addEventListener('click', () => history.back());
-  HOME_BTN.addEventListener('click', goToHome); // Привязать goToHome к кнопке Главная
+  HOME_BTN?.addEventListener('click', goToHome); 
 
   const onSearch = debounce((e) => renderList(e.target.value || ''), 160);
   SEARCH.addEventListener('input', onSearch);
 
   // init
   async function init() {
-    LIST_EL.innerHTML = '<div class="center">Загрузка базы телефонов…</div>';
+    LIST_EL.innerHTML = '<div class="center">Загрузка базы телефонов (автоматически)...</div>';
+    
+    // ----------------------------------------------------------------------------------
+    // Загрузка индекса из сгенерированного list.json
+    // ----------------------------------------------------------------------------------
+    const FILE_LIST_PATH = 'list.json'; 
+    
     try {
-      // ----------------------------------------------------------------------------------
-      // НОВАЯ ЛОГИКА ЗАГРУЗКИ: Пути к файлам, соответствующие вашей структуре папок
-      // ----------------------------------------------------------------------------------
-      const allFilePaths = [
-        'data/phones_db/realme/realme_note_50-rmx3934-dead.json',
-        'data/phones_db/samsung/sm_a_15-a515f-imei.json',
-        'data/phones_db/xiaomi/redmi_9a-dandaleon-frp.json',
-        // Добавьте сюда другие пути, если файлов больше
-      ];
-      // ----------------------------------------------------------------------------------
-
-      if (!Array.isArray(allFilePaths)) throw new Error('Список путей должен быть массивом строк');
-      rawPhones = allFilePaths; // rawPhones теперь содержит только пути
+      const allFilePaths = await fetchJson(FILE_LIST_PATH, 15000);
+      
+      if (!Array.isArray(allFilePaths)) {
+        throw new Error(`${FILE_LIST_PATH} не является массивом путей.`);
+      }
+      
+      rawPhones = allFilePaths;
       aggregatePhones(rawPhones);
       renderBrandFilters();
       renderList();
+      
+      // Обработка хэша URL после полной загрузки списка
+      handleInitialHash();
 
-      // support opening via hash (hash handling logic remains the same, but uses new aggregated data)
-      if (location.hash) {
-        // ... (hash handling logic)
-      }
     } catch (err) {
       console.error(err);
-      LIST_EL.innerHTML = `<div class="center">Ошибка загрузки базы: ${escapeHtml(err.message || '')}</div>`;
+      LIST_EL.innerHTML = `<div class="center">Ошибка загрузки базы: Проверьте, что файл ${FILE_LIST_PATH} сгенерирован и загружен на сервер. ${escapeHtml(err.message || '')}</div>`;
     }
   }
 
