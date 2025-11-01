@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Ошибка соединения — Приложение</title>
+  <meta name="description" content="Страница ошибки соединения для мобильного экрана. Тёмная тема, зелёные акценты." />
+  <style>
+    :root{
+      --bg:#0b0e10;
+      --card:#0f1416;
+      --muted:#9aa6a1;
+      --accent:#00b37e; /* зелёный */
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(0,179,126,0.04), transparent),
+                  linear-gradient(180deg, #060708 0%, var(--bg) 100%);
+      color:#e6efe9;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      line-height:1.35;
+    }
+
+    .wrap{
+      width:100%;
+      max-width:420px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:calc(var(--radius));
+      padding:26px;
+      box-shadow: 0 10px 30px rgba(2,6,8,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    .visual{
+      display:flex;align-items:center;gap:14px;
+    }
+    .icon{
+      width:78px;height:78px;flex:0 0 78px;border-radius:18px;
+      background:linear-gradient(135deg, rgba(0,179,126,0.15), rgba(0,179,126,0.06));
+      display:grid;place-items:center;backdrop-filter: blur(6px);
+      border:1px solid rgba(0,179,126,0.14);
+    }
+
+    svg{width:46px;height:46px}
+
+    h1{
+      font-size:18px;margin:0;color:#e8f7ef;
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    p.lead{margin:6px 0 0;color:var(--muted);font-size:13px;transition: opacity .45s ease, transform .45s ease}
+
+    .status{
+      margin-top:18px;padding:14px;border-radius:12px;background:var(--glass);
+      display:flex;gap:12px;align-items:center;justify-content:space-between;
+      border:1px solid rgba(255,255,255,0.02)
+    }
+    .status .left{display:flex;gap:12px;align-items:center}
+    .dot{
+      width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.06);box-shadow:0 2px 6px rgba(0,0,0,0.6);
+      border:2px solid rgba(255,255,255,0.03)
+    }
+    .dot.off{background:#6b6f73;border-color:rgba(0,0,0,0.5)}
+    .dot.online{background:var(--accent);box-shadow:0 4px 18px rgba(0,179,126,0.18)}
+
+    .actions{display:flex;gap:10px;margin-top:18px}
+    .btn{flex:1;padding:12px 14px;border-radius:12px;border:0;font-weight:600;font-size:14px;cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),#00a36d);color:#06221b;box-shadow:0 10px 28px rgba(0,179,126,0.12)}
+
+    .hint{margin-top:14px;font-size:13px;color:var(--muted)}
+    .contact{color:var(--accent);font-weight:600}
+
+    footer{margin-top:16px;text-align:center;color:rgba(255,255,255,0.04);font-size:12px}
+
+    /* маленькая анимация текста при смене языка */
+    .fade {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    .pulse{animation:pulse 1.8s infinite}
+    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+
+    /* responsive tweaks */
+    @media (max-width:380px){.wrap{padding:18px}.icon{width:64px;height:64px;border-radius:12px}
+      svg{width:40px;height:40px}}
+  </style>
+</head>
+<body>
+  <main class="wrap" role="main" aria-labelledby="title">
+    <div class="visual">
+      <div class="icon" aria-hidden="true">
+        <!-- simple wifi + slash icon -->
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" role="img" aria-label="no connection icon">
+          <path d="M2 2l20 20" stroke="url(#g)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5.1 10.1a9 9 0 0 1 13.8 0" stroke="url(#g)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8.2 13.2a5 5 0 0 1 7.6 0" stroke="url(#g)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11.4 16.4a1.4 1.4 0 1 1 1.99 0" stroke="url(#g)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="g" x1="0" x2="1">
+              <stop offset="0" stop-color="#8fffd1" stop-opacity="0.9" />
+              <stop offset="1" stop-color="#00b37e" stop-opacity="0.95" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div style="flex:1">
+        <h1 id="title">Нет соединения</h1>
+        <p class="lead" id="subtitle">Похоже, мы не можем связаться с сервером. Проверьте сеть или попробуйте снова.</p>
+      </div>
+    </div>
+
+    <div class="status" id="status">
+      <div class="left">
+        <div class="dot off" id="dot" aria-hidden="true"></div>
+        <div>
+          <div id="statusTitle" style="font-weight:700">Офлайн</div>
+          <div id="statusMsg" style="font-size:13px;color:var(--muted)">Соединение с интернетом не обнаружено</div>
+        </div>
+      </div>
+      <div style="min-width:72px;text-align:right">
+        <div id="tryText" style="font-size:13px;color:var(--muted)">Авто: —</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="retry" aria-label="Повторить попытку">Повторить</button>
+    </div>
+
+    <p class="hint" id="hint">Если интернет есть, но приложение не отвечает — напишите в <span class="contact">@ill_hack_you</span>. Мы посмотрим 😉</p>
+
+    <footer id="footer">Совет: Wi-Fi / Мобильные данные → включены? 📶</footer>
+  </main>
+
+  <script>
+    /* ========== ТЕКСТЫ НА 3 ЯЗЫКА ========== */
+    const LANGS = [
+      { // 0: Uzbek (o'zbek)
+        lang: "uz",
+        ui: {
+          title: "Server bilan aloqa yo‘q",
+          subtitle: "Ko‘proq server bilan bog‘lanolmayapmiz. Tarmoqni tekshiring yoki qayta urinib ko‘ring.",
+          retry: "Qayta",
+          hint: "Internet bor, lekin ilova ishlamayapti? <span class='contact'>@ill_hack_you</span> bilan bog‘laning.",
+          footer: "Maslahat: Wi-Fi / Mobil ma'lumot yoqilganmi? 📶",
+          status_offline_title: "Ofline",
+          status_offline_msg: "Internetga ulanish topilmadi",
+          checking: "Tekshirilmoqda...",
+          server_ok_title: "Server mavjud",
+          server_ok_msg: "Internet va server javob beradi.",
+          server_fail_title: "Internet bor, lekin serverga yeta olmadi",
+          server_fail_msg: "Tarmoq ishlayotgan bo‘lishi mumkin, lekin backend javob bermayapti."
+        }
+      },
+      { // 1: Russian
+        lang: "ru",
+        ui: {
+          title: "Нет соединения",
+          subtitle: "Похоже, мы не можем связаться с сервером. Проверьте сеть или попробуйте снова.",
+          retry: "Повторить",
+          hint: "Если интернет есть, но приложение не отвечает — свяжитесь с <span class='contact'>@ill_hack_you</span>.",
+          footer: "Совет: Wi-Fi / Мобильные данные → включены? 📶",
+          status_offline_title: "Офлайн",
+          status_offline_msg: "Соединение с интернетом не обнаружено",
+          checking: "Проверка...",
+          server_ok_title: "Сервер доступен",
+          server_ok_msg: "Интернет и сервер отвечают — но приложение может вести себя иначе.",
+          server_fail_title: "Интернет есть, но сервер недоступен",
+          server_fail_msg: "Похоже, сеть работает, но бэкенд не отвечает."
+        }
+      },
+      { // 2: English
+        lang: "en",
+        ui: {
+          title: "No connection",
+          subtitle: "We can't reach the server. Check your network or try again.",
+          retry: "Retry",
+          hint: "Internet works but the app doesn't? Contact <span class='contact'>@ill_hack_you</span>.",
+          footer: "Tip: Is Wi-Fi / Mobile data turned on? 📶",
+          status_offline_title: "Offline",
+          status_offline_msg: "No internet connection detected",
+          checking: "Checking...",
+          server_ok_title: "Server reachable",
+          server_ok_msg: "Internet and server respond — app may still behave differently.",
+          server_fail_title: "Online, but server unreachable",
+          server_fail_msg: "Network works, but backend does not respond."
+        }
+      }
+    ];
+
+    /* ========== ЭЛЕМЕНТЫ UI ========== */
+    const $ = id => document.getElementById(id);
+    const titleEl = $('title');
+    const subtitleEl = $('subtitle');
+    const retryBtn = $('retry');
+    const hintEl = $('hint');
+    const footerEl = $('footer');
+    const dot = $('dot');
+    const statusTitle = $('statusTitle');
+    const statusMsg = $('statusMsg');
+    const tryText = $('tryText');
+
+    /* ========== ЯЗЫКОВОЙ ЦИКЛ ========== */
+    let langIndex = 1; // стартовый индекс (1=русский), чтобы выглядело как раньше
+    const LANG_SWITCH_INTERVAL = 4000; // ms
+
+    function applyLang(idx){
+      const u = LANGS[idx].ui;
+      // плавное скрытие
+      titleEl.classList.add('fade');
+      subtitleEl.classList.add('fade');
+      hintEl.classList.add('fade');
+      retryBtn.classList.add('fade');
+      footerEl.classList.add('fade');
+
+      // обновляем текст после анимации
+      setTimeout(() => {
+        titleEl.textContent = u.title;
+        subtitleEl.innerHTML = u.subtitle;
+        retryBtn.textContent = u.retry;
+        hintEl.innerHTML = u.hint;
+        footerEl.textContent = u.footer;
+        // если сейчас в оффлай — обновим статусы локализовано
+        if(!navigator.onLine){
+          statusTitle.textContent = u.status_offline_title;
+          statusMsg.textContent = u.status_offline_msg;
+          tryText.textContent = 'Авто: —';
+        } else {
+          // если онлайн — оставим как есть; статус обновится функцией update()
+        }
+
+        // показать обратно
+        titleEl.classList.remove('fade');
+        subtitleEl.classList.remove('fade');
+        hintEl.classList.remove('fade');
+        retryBtn.classList.remove('fade');
+        footerEl.classList.remove('fade');
+      }, 220);
+    }
+
+    // начальная установка языка
+    applyLang(langIndex);
+
+    // переключение по кругу
+    setInterval(()=>{
+      langIndex = (langIndex + 1) % LANGS.length;
+      applyLang(langIndex);
+    }, LANG_SWITCH_INTERVAL);
+
+    /* ========== СЕТЕВАЯ ЛОГИКА (сохранена вся функциональность) ========== */
+    function fetchWithTimeout(url, ms = 3000){
+      const controller = new AbortController();
+      const id = setTimeout(()=>controller.abort(), ms);
+      return fetch(url, {method:'GET', cache:'no-store', signal:controller.signal}).finally(()=>clearTimeout(id));
+    }
+
+    async function checkServerReachable(){
+      try{
+        const origin = window.location.origin || (location.protocol + '//' + location.host);
+        const url = origin + '/favicon.ico';
+        const res = await fetchWithTimeout(url, 2500);
+        return res && (res.status >= 200 && res.status < 400);
+      }catch(e){
+        return false;
+      }
+    }
+
+    async function update(){
+      const u = LANGS[langIndex].ui;
+      const online = navigator.onLine;
+      if(!online){
+        dot.classList.remove('online');
+        dot.classList.add('off');
+        statusTitle.textContent = u.status_offline_title;
+        statusMsg.textContent = u.status_offline_msg;
+        subtitleEl.textContent = u.subtitle;
+        tryText.textContent = 'Авто: —';
+        hintEl.style.display = 'block';
+        return;
+      }
+
+      // есть интернет — проверим сервер
+      statusTitle.textContent = u.checking;
+      statusMsg.textContent = 'Определяем доступность сервера';
+      tryText.textContent = 'Авто: ...';
+      dot.classList.remove('off');
+      dot.classList.add('pulse');
+
+      const ok = await checkServerReachable();
+      dot.classList.remove('pulse');
+      if(ok){
+        dot.classList.remove('off');
+        dot.classList.add('online');
+        statusTitle.textContent = u.server_ok_title;
+        statusMsg.textContent = u.server_ok_msg;
+        subtitleEl.textContent = u.subtitle;
+        tryText.textContent = 'Авто: вкл.';
+        hintEl.style.display = 'none';
+      }else{
+        dot.classList.remove('online');
+        dot.classList.add('off');
+        statusTitle.textContent = u.server_fail_title;
+        statusMsg.textContent = u.server_fail_msg;
+        subtitleEl.textContent = u.subtitle;
+        tryText.textContent = 'Авто: вкл.';
+        hintEl.style.display = 'block';
+      }
+    }
+
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+
+    retryBtn.addEventListener('click', async ()=>{
+      retryBtn.disabled = true;
+      const prev = retryBtn.textContent;
+      retryBtn.textContent = LANGS[langIndex].ui.checking || 'Проверяем...';
+      await update();
+      setTimeout(()=>{ retryBtn.disabled = false; retryBtn.textContent = LANGS[langIndex].ui.retry; }, 900);
+    });
+
+    // initial
+    update();
+
+    // периодическое авто-обновление (только если online)
+    let autoTimer = setInterval(()=>{ if(navigator.onLine) update(); }, 10000);
+  </script>
+</body>
+</html>
