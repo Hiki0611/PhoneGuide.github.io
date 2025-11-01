@@ -9,37 +9,28 @@
 </head>
 <body>
 
-  <!-- background decorative layers (kept for style) -->
   <div class="bg-gradient"></div>
   <div class="float-shape s1"></div>
   <div class="float-shape s2"></div>
 
-  <!-- canvas for particles (script creates #bgCanvas) -->
-
-  <!-- NAVBAR -->
   <header class="navbar">
     <button id="backBtn" class="btn hidden" aria-label="Назад">←</button>
     <h1 class="title">PhoneGuide</h1>
     <input id="search" type="search" placeholder="🔍 Поиск модели или codename" autocomplete="off" />
   </header>
 
-  <!-- Brand filters (chips) -->
   <div id="brandFilters" class="brand-filters" aria-hidden="false" role="toolbar" aria-label="Фильтр по брендам">
-    <!-- chips будут добавляться script.js -->
-  </div>
+    </div>
 
-  <!-- APP -->
   <main id="app" role="main">
     <div id="list" class="list" aria-live="polite"></div>
 
     <section id="detail" class="detail hidden" aria-hidden="true"></section>
   </main>
 
-  <!-- FOOTER: nav + contact -->
   <footer class="footer">
     <div class="nav">
-      <button class="nav-btn active" aria-pressed="true">Главная</button>
-      <button class="nav-btn">Избранное</button>
+      <button class="nav-btn active" id="homeBtn" aria-pressed="true">Главная</button>
       <button class="nav-btn" id="aboutBtn">О приложении</button>
     </div>
 
@@ -66,6 +57,8 @@
     document.getElementById('aboutBtn').addEventListener('click', () => {
       const detail = document.getElementById('detail');
       const list = document.getElementById('list');
+      // Добавлена логика для кнопки "Главная"
+      document.getElementById('homeBtn')?.classList.remove('active');
       list.classList.add('hidden'); detail.classList.remove('hidden');
       document.getElementById('backBtn').classList.remove('hidden');
       detail.innerHTML = `

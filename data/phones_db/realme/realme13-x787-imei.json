@@ -1,0 +1,7 @@
+{
+  "brand": "realme",
+  "model": "realme12",
+  "codename": "x787",
+  "issue": "imei",
+  "instructions": "1) Проверить питание; 2) Замерить напряжение на плате; 3) Перепрошивка через TestPoint..."
+}
