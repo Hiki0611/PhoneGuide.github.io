@@ -4,7 +4,7 @@
   'use strict';
 
   /* ---------------------------
-     Background particles canvas (Усиленный хакерский эффект)
+     Background particles canvas (Эффект "Матрицы")
      --------------------------- */
   (function initBackgroundCanvas() {
     try {
@@ -24,22 +24,19 @@
       ctx.scale(DPR, DPR);
 
       const particles = [];
-      // Увеличенная плотность для "грозной сети"
-      const PARTICLE_COUNT = Math.max(30, Math.floor((w * h) / 70000)); 
-      const MAX_SPEED = 0.5; // Увеличенная скорость
-      const BASE_ALPHA = 0.08;
-      const MAX_FLICKER = 0.3;
-      
+      // Высокая плотность для эффекта дождя
+      const PARTICLE_COUNT = Math.max(100, Math.floor((w * h) / 3000)); 
+      const MAX_SPEED = 2; // Значительная скорость падения
+      const BASE_ALPHA = 0.4; // Высокая базовая прозрачность
+
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         particles.push({
           x: Math.random() * w,
           y: Math.random() * h,
-          r: 1 + Math.random() * 2,
-          vx: (Math.random() - 0.5) * MAX_SPEED,
-          vy: (Math.random() - 0.5) * MAX_SPEED,
-          // Ограничение цвета: от Синего (240) до Циана (180)
-          hue: 180 + Math.random() * 60, 
-          alpha: BASE_ALPHA + Math.random() * 0.05
+          r: 0.5 + Math.random() * 1.5, // Тонкие точки
+          vx: 0, // Не двигаются по горизонтали
+          vy: Math.random() * MAX_SPEED + 0.5, // Падают вниз
+          alpha: BASE_ALPHA * (0.5 + Math.random() * 0.5) // Разная яркость
         });
       }
 
@@ -48,8 +45,9 @@
         return /Android|iPhone|iPad|Mobi/i.test(ua);
       }
       if (shouldThrottle()) {
-        for (let p of particles) { p.vx *= 0.3; p.vy *= 0.3; }
-        if (w < 600) particles.splice(Math.floor(particles.length / 3));
+        // Уменьшение плотности и скорости на мобильных
+        for (let p of particles) { p.vy *= 0.5; }
+        if (w < 600) particles.splice(Math.floor(particles.length / 2));
       }
 
       let last = performance.now();
@@ -58,35 +56,28 @@
         last = now;
         
         // Более темное фоновое перекрытие для эффекта "шлейфа" (trail effect)
-        ctx.fillStyle = 'rgba(6, 7, 9, 0.06)'; 
+        ctx.fillStyle = 'rgba(6, 7, 9, 0.2)'; 
         ctx.fillRect(0, 0, w, h);
         
         for (let p of particles) {
-          p.x += p.vx * (dt / 16);
           p.y += p.vy * (dt / 16);
-          if (p.x < -10) p.x = w + 10;
-          if (p.x > w + 10) p.x = -10;
-          if (p.y < -10) p.y = h + 10;
-          if (p.y > h + 10) p.y = -10;
+          // Когда частица достигает дна, возвращаем её наверх с новой случайной позицией X
+          if (p.y > h + 10) { 
+             p.y = -10;
+             p.x = Math.random() * w; // Новая позиция по горизонтали
+             p.vy = Math.random() * MAX_SPEED + 0.5;
+          }
 
-          // Усиленный синий/циановый градиент
-          const hue = 180; // Основной цвет Cyan (180)
-          const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 8); 
-          grd.addColorStop(0, `hsla(${hue}, 100%, 70%, ${p.alpha * 1.5})`); // Более яркий центр
-          grd.addColorStop(0.5, `hsla(${hue}, 80%, 50%, ${p.alpha * 0.8})`);
-          grd.addColorStop(1, `hsla(${hue}, 80%, 50%, 0)`);
+          // Используем чистый зеленый цвет из CSS переменной для "Матрицы"
+          const baseColor = '22ff88'; // var(--accent-green)
+          
           ctx.beginPath();
-          ctx.fillStyle = grd;
-          ctx.arc(p.x, p.y, p.r * 8, 0, Math.PI * 2);
+          // Рисуем точку как маленький вертикальный "след"
+          ctx.fillStyle = `rgba(34, 255, 136, ${p.alpha})`; // Чистый зеленый
+          ctx.fillRect(p.x, p.y, p.r, p.r * 8); // Узкий вертикальный прямоугольник
           ctx.fill();
         }
         
-        // Более агрессивный/частый рандомный фликер
-        if (Math.random() > 0.95) { 
-          const i = Math.floor(Math.random() * particles.length);
-          particles[i].alpha = BASE_ALPHA + MAX_FLICKER; // Яркое мерцание
-          setTimeout(() => { particles[i].alpha = BASE_ALPHA + Math.random() * 0.05; }, 100 + Math.random() * 300);
-        }
         requestAnimationFrame(draw);
       }
 
@@ -98,6 +89,20 @@
         canvas.style.width = w + 'px';
         canvas.style.height = h + 'px';
         ctx.scale(DPR, DPR);
+        
+        // Пересоздание частиц при ресайзе для корректной плотности
+        particles.length = 0;
+        const newCount = Math.max(100, Math.floor((w * h) / 3000));
+        for (let i = 0; i < newCount; i++) {
+            particles.push({
+              x: Math.random() * w,
+              y: Math.random() * h,
+              r: 0.5 + Math.random() * 1.5,
+              vx: 0,
+              vy: Math.random() * MAX_SPEED + 0.5,
+              alpha: BASE_ALPHA * (0.5 + Math.random() * 0.5)
+            });
+        }
       });
 
       requestAnimationFrame(draw);
@@ -107,9 +112,9 @@
   })();
 
   /* ---------------------------
-     Core app
+     Core app (unchanged)
      --------------------------- */
-
+  // ... (Остальной код приложения остается без изменений)
   const BACK_BTN = document.getElementById('backBtn');
   const HOME_BTN = document.getElementById('homeBtn'); 
   const ABOUT_BTN = document.getElementById('aboutBtn'); 
@@ -121,7 +126,6 @@
   const TG_COPY_BTN_ID = 'tgCopyBtn';
   const TG_HANDLE = '@ill_hack_you';
   const STORAGE_KEY = 'phoneguide_details_cache_v1';
-
   let rawPhones = []; 
   let aggregatedByBrand = {};
   let activeBrand = null;
@@ -512,7 +516,7 @@
       } else if (hash.startsWith('model-')) {
           const key = hash.replace(/^model-/, '');
           for (const b in aggregatedByBrand) {
-            const found = aggregatedByBrand[b].find(x => `${x.brand}||${x.model}||${x.codename}` === key);
+            const found = aggregatedByBrand[b].find(x => `${x.brand}||${x.model}||x.codename}` === key);
             if (found) { openModelPanel(found); return; }
           }
       } else if (hash.startsWith('data/')) {

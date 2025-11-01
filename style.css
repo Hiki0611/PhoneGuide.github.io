@@ -9,540 +9,7 @@
   --accent-green-2: #16d67a;  /* вторичный зелёный */
   --accent-purple: #9b7bff;
   --accent-pink: #ff6bb1;
-  --accent-cyan: #5ce3ff;
-  --accent-gradient: linear-gradient(90deg, var(--accent-green), var(--accent-purple));
-  --radius: 14px;
-  --shadow: 0 8px 26px rgba(4,6,8,0.72);
-  --glass-border: 1px solid rgba(255,255,255,0.03);
-  font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
-}
-
-/* Page background animated gradient + green glow */
-html,body{height:100%}
-body{
-  margin:0;
-  min-height:100vh;
-  color:var(--text);
-  -webkit-font-smoothing: antialiased;
-  background-color: var(--bg);
-  padding-bottom: 80px; /* Space for fixed footer */
-  position:relative;
-}
-a{ color:var(--accent-green-2); text-decoration:none; }
-a:hover{ text-decoration:underline; }
-
-/* Background elements */
-.bg-gradient{
-  position:fixed; top:0; left:0; right:0; bottom:0;
-  background: radial-gradient(circle at top left, rgba(34,255,136,0.04) 0%, transparent 40%),
-              radial-gradient(circle at bottom right, rgba(155,123,255,0.04) 0%, transparent 60%);
-  z-index: -2;
-}
-#bgCanvas{
-  position:fixed; top:0; left:0; z-index:-1; pointer-events:none; opacity:0.6;
-}
-.float-shape{
-  position:fixed; width:200px; height:200px; border-radius:50%; z-index:-3; opacity:0.1;
-  filter: blur(80px);
-}
-.s1{ top:5vh; left:5vw; background:var(--accent-green); }
-.s2{ bottom:5vh; right:5vw; background:var(--accent-purple); }
-
-/* Layout & Typography */
-.center{
-  text-align:center; padding:50px 20px; color:var(--muted); font-size:1.1rem;
-}
-main{
-  max-width:900px; margin:0 auto; padding:0 14px;
-}
-h1, h2{ font-weight:900; }
-.glow-title{
-  color:var(--text);
-  text-shadow: 0 0 14px rgba(34,255,136,0.3);
-}
-
-
-/* NAVBAR */
-.navbar{
-  display:flex; align-items:center; gap:12px; padding:16px 14px 10px; 
-  max-width:900px; margin:0 auto;
-}
-.navbar h1{ font-size:1.5rem; margin:0; }
-.navbar .btn{ 
-  font-size:1.4rem; font-weight:900; padding:4px 8px; background:none; border:none; color:var(--text); cursor:pointer; 
-  transition: transform 0.2s ease;
-}
-.navbar .btn:hover{ transform: translateX(-2px); }
-.navbar .btn.hidden{ display:none; }
-
-/* Search */
-#search{
-  flex-grow:1;
-  padding:10px 14px;
-  border-radius:var(--radius);
-  border:var(--glass-border);
-  background: var(--glass);
-  color:var(--text);
-  font-size:1rem;
-  outline:none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-#search:focus{
-  border-color: var(--accent-green-2);
-  box-shadow: 0 0 0 2px rgba(34,255,136,0.2);
-}
-
-/* Brand Filters (Chips) */
-.brand-filters{
-  display:flex; flex-wrap:wrap; gap:8px;
-  max-width:900px; margin:0 auto; padding:10px 14px 20px;
-}
-.brand-chip{
-  padding:6px 14px; border-radius:18px; border:none; cursor:pointer;
-  background: var(--glass);
-  color:var(--muted);
-  font-size:0.9rem;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-}
-.brand-chip:hover{
-  background: rgba(255,255,255,0.04);
-  color:var(--text);
-}
-.brand-chip.active{
-  background: var(--accent-green);
-  color:var(--bg);
-  font-weight:700;
-  box-shadow: 0 4px 10px rgba(34,255,136,0.3);
-}
-
-/* LIST VIEW */
-.group h2{
-  margin:20px 0 10px; font-size:1.2rem; color:var(--text);
-}
-.list{
-  display:flex; flex-direction:column; gap:10px;
-}
-.list .item{
-  display:flex; justify-content:space-between; align-items:center;
-  padding:12px 16px; border-radius:var(--radius);
-  background: var(--card);
-  border:var(--glass-border);
-  cursor:pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.list .item:hover{
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-}
-.list .meta{
-  flex-grow:1;
-}
-.list .model{
-  font-size:1.1rem; font-weight:700; line-height:1.3;
-}
-.list .codename{
-  font-size:0.85rem; color:var(--muted); margin-top:2px;
-}
-.list .pill{
-  padding:4px 8px; border-radius:12px; font-size:0.8rem; font-weight:700;
-  border:1px solid; cursor:pointer; margin-left:8px;
-  transition: background 0.2s, color 0.2s;
-}
-.list .issue-pill[data-issue="imei"]{ background:rgba(34,255,136,0.1); color:var(--accent-green); border-color:rgba(34,255,136,0.3); }
-.list .issue-pill[data-issue="frp"]{ background:rgba(255,107,177,0.1); color:var(--accent-pink); border-color:rgba(255,107,177,0.3); }
-.list .issue-pill[data-issue="dead"]{ background:rgba(155,123,255,0.1); color:var(--accent-purple); border-color:rgba(155,123,255,0.3); }
-
-/* DETAIL VIEW */
-.detail{
-  padding:20px 14px;
-  min-height: calc(100vh - 120px);
-}
-.detail .meta{ font-size:0.9rem; color:var(--muted); margin-bottom:12px; }
-.detail .instructions{ 
-  padding:15px; border-radius:var(--radius); 
-  background: var(--panel);
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  border:var(--glass-border);
-}
-
-
-/* FOOTER */
-.footer{
-  position:fixed; left:0; right:0; bottom:0; 
-  display:flex; flex-direction:column; 
-  padding:10px 14px; 
-  background: linear-gradient(180deg, rgba(6,8,10,0.4), rgba(6,8,10,0.9));
-  backdrop-filter: blur(10px);
-  z-index:100;
-  border-top:var(--glass-border);
-}
-.footer .nav{
-  display:flex; justify-content:center; gap:10px; margin-bottom:8px;
-}
-.footer .nav-btn{
-  padding:8px 16px; border-radius:10px; border:none; cursor:pointer;
-  background: var(--glass);
-  color:var(--muted);
-  font-weight:600;
-  font-size:0.9rem;
-  transition: background 0.2s, color 0.2s;
-}
-.footer .nav-btn:hover{
-  background: rgba(255,255,255,0.04);
-}
-.footer .nav-btn.active{
-  background: var(--accent-green-2);
-  color:var(--bg);
-  font-weight:700;
-}
-.footer-info{
-  display:flex; justify-content:space-between; font-size:0.8rem; color:var(--muted);
-}
-.footer-info a{ color:var(--muted); }
-.footer-info a:hover{ color:var(--accent-green-2); }
-
-:root{
-  --bg: #060709;
-  --panel:#0f1416;
-  --card: linear-gradient(180deg, rgba(18,22,20,0.72), rgba(8,10,12,0.62));
-  --glass: rgba(255,255,255,0.02);
-  --text: #eaffef;
-  --muted: #a9cbb3;
-  --accent-green: #22ff88;    /* основной зелёный */
-  --accent-green-2: #16d67a;  /* вторичный зелёный */
-  --accent-purple: #9b7bff;
-  --accent-pink: #ff6bb1;
-  --accent-cyan: #5ce3ff;
-  --accent-gradient: linear-gradient(90deg, var(--accent-green), var(--accent-purple));
-  --radius: 14px;
-  --shadow: 0 8px 26px rgba(4,6,8,0.72);
-  --glass-border: 1px solid rgba(255,255,255,0.03);
-  font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
-}
-
-/* Page base and background (unchanged) */
-html,body{height:100%}
-body{
-  margin:0;
-  min-height:100vh;
-  color:var(--text);
-  -webkit-font-smoothing: antialiased;
-  background-color: var(--bg);
-  padding-bottom: 96px; /* Space for fixed footer */
-  position:relative;
-  /* (background gradients, shapes, and particles logic is in place) */
-}
-a{ color:var(--accent-green-2); text-decoration:none; }
-a:hover{ text-decoration:underline; }
-
-/* NAVBAR (unchanged) */
-.navbar{
-  position:sticky;
-  top:0;
-  z-index:30;
-  display:flex; align-items:center; gap:12px; padding:14px; 
-  backdrop-filter: blur(8px) saturate(1.05); 
-  background: linear-gradient(180deg, rgba(4,6,8,0.35), rgba(6,8,10,0.18));
-  border-bottom: var(--glass-border);
-}
-.navbar h1{ font-size:1.05rem; margin:0; }
-.navbar .btn{ 
-  font-size:1.4rem; font-weight:900; padding:4px 8px; background:none; border:none; color:var(--text); cursor:pointer; 
-  transition: transform 0.2s ease;
-}
-#search{ margin-left:auto; width:48%; max-width:420px; padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03);
-  background: rgba(255,255,255,0.016); color:var(--text); outline:none; box-shadow: 0 6px 18px rgba(4,6,8,0.5); }
-#search.hidden { display:none!important; } /* Добавлено для скрытия поиска */
-
-/* Brand Filters (Chips) */
-.brand-filters{
-  margin:0 auto; max-width:980px; padding:10px 14px 10px;
-  display:flex; flex-wrap:nowrap; gap:8px; overflow-x:auto;
-  border-bottom: var(--glass-border);
-  z-index:9;
-}
-.brand-filters.hidden { display:none!important; } /* Добавлено для скрытия фильтров */
-.brand-chip{ flex:0 0 auto; padding:8px 12px; border-radius:999px; background: rgba(255,255,255,0.012); color:var(--muted); font-weight:700; font-size:0.88rem; border:1px solid rgba(255,255,255,0.02); cursor:pointer; }
-.brand-chip.active{ color:#08130b; background: linear-gradient(90deg, var(--accent-green), var(--accent-green-2)); box-shadow: 0 12px 40px rgba(34,255,136,0.12); border: none; }
-
-
-/* LIST VIEW (unchanged) */
-main{ max-width:980px; margin:16px auto; padding:0 16px; z-index:10; }
-.group h2{ margin:0 0 8px 0; font-size:0.95rem; color:var(--accent-green-2); }
-.list{ display:flex; flex-direction:column; gap:10px; }
-.item{ display:flex; align-items:center; justify-content:space-between; padding:12px; border-radius:12px; background: linear-gradient(180deg, rgba(18,22,20,0.6), rgba(8,10,12,0.6)); border: var(--glass-border); cursor:pointer; }
-.item .meta{ flex-grow:1; }
-.model{ font-weight:800; font-size:1rem; }
-.codename{ color:var(--muted); font-size:0.86rem; }
-.pill{ padding:6px 10px; border-radius:999px; font-size:0.82rem; border:1px solid; }
-.issue-pill[data-issue="imei"]{ background:rgba(34,255,136,0.1); color:var(--accent-green); border-color:rgba(34,255,136,0.3); }
-.issue-pill[data-issue="frp"]{ background:rgba(255,107,177,0.1); color:var(--accent-pink); border-color:rgba(255,107,177,0.3); }
-.issue-pill[data-issue="dead"]{ background:rgba(155,123,255,0.1); color:var(--accent-purple); border-color:rgba(155,123,255,0.3); }
-
-
-/* !!! DETAIL VIEW (СДЕЛАНО ЧИТАБЕЛЬНЫМ) !!! */
-.detail{
-  position:fixed; /* Закрепляем поверх всего */
-  top:0; bottom:0; left:0; right:0;
-  z-index:20; 
-  /* Фон, чтобы выделить: */
-  background: rgba(6,7,9,0.9); 
-  backdrop-filter: blur(4px);
-  padding-top: 60px; /* Учитываем высоту навбара */
-  overflow-y:auto; /* Обеспечиваем прокрутку контента */
-}
-
-/* Контейнер для контента внутри Detail (чтобы центрировать и ограничить ширину) */
-.detail-content{
-  max-width:800px;
-  width:100%;
-  margin:0 auto;
-  padding:20px 16px 100px 16px; /* Большой отступ снизу для футера */
-}
-
-/* Стиль для заголовка и мета-информации (для модального окна) */
-.detail h2{ 
-  margin-top:0;
-  font-size:1.5rem; 
-  color:var(--text); 
-  text-shadow: 0 0 16px rgba(34,255,136,0.1);
-}
-.detail .meta{ color:var(--muted); margin-bottom:16px; font-size:0.95rem; }
-
-/* Блок инструкции: увеличенный размер шрифта, улучшенный фон */
-.instructions{
-  background: var(--panel);
-  border-radius:var(--radius); 
-  padding:16px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-size: 1rem; /* Увеличенный размер для лучшей читабельности */
-  line-height: 1.6;
-  border:var(--glass-border);
-  box-shadow: 0 8px 30px rgba(4,6,8,0.5);
-}
-
-/* FOOTER (unchanged) */
-.footer{
-  position:fixed; left:0; right:0; bottom:0; 
-  display:flex; flex-direction:column; 
-  padding:10px 14px; 
-  background: linear-gradient(180deg, rgba(6,8,10,0.4), rgba(6,8,10,0.9));
-  backdrop-filter: blur(10px);
-  z-index:100;
-  border-top:var(--glass-border);
-}
-.footer .nav{ display:flex; justify-content:center; gap:10px; margin-bottom:8px; }
-.footer .nav-btn{ padding:8px 16px; border-radius:10px; border:none; cursor:pointer; background: var(--glass); color:var(--muted); font-weight:600; font-size:0.9rem; }
-.footer .nav-btn.active{ background: var(--accent-green-2); color:var(--bg); font-weight:700; }
-.footer-info{ display:flex; justify-content:space-between; font-size:0.8rem; color:var(--muted); }
-
-/* responsive */
-@media (max-width:640px){
-  .navbar h1 { font-size:1.2rem; }
-  .detail { padding-top: 50px; }
-  .detail-content { padding-bottom: 90px; }
-}
-
-/* utility */
-.hidden{ display:none!important; }
-.center{ text-align:center; padding:14px; color:var(--muted); }
-.glow-title{ color:var(--accent-green); text-shadow: 0 12px 40px rgba(34,255,136,0.08); }
-
-:root{
-  --bg: #060709;
-  --panel:#0f1416;
-  --card: linear-gradient(180deg, rgba(18,22,20,0.72), rgba(8,10,12,0.62));
-  --glass: rgba(255,255,255,0.02);
-  --text: #eaffef;
-  --muted: #a9cbb3;
-  --accent-green: #22ff88;    /* основной зелёный */
-  --accent-green-2: #16d67a;  /* вторичный зелёный */
-  --accent-purple: #9b7bff;
-  --accent-pink: #ff6bb1;
-  --accent-cyan: #5ce3ff;
-  --accent-gradient: linear-gradient(90deg, var(--accent-green), var(--accent-purple));
-  --radius: 14px;
-  --shadow: 0 8px 26px rgba(4,6,8,0.72);
-  --glass-border: 1px solid rgba(255,255,255,0.03);
-  font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
-}
-
-/* Page base and background (unchanged) */
-html,body{height:100%}
-body{
-  margin:0;
-  min-height:100vh;
-  color:var(--text);
-  -webkit-font-smoothing: antialiased;
-  background-color: var(--bg);
-  padding-bottom: 96px; 
-  position:relative;
-}
-a{ color:var(--accent-green-2); text-decoration:none; }
-a:hover{ text-decoration:underline; }
-
-/* Background elements (unchanged) */
-.bg-gradient{ position:fixed; top:0; left:0; right:0; bottom:0; background: radial-gradient(circle at top left, rgba(34,255,136,0.04) 0%, transparent 40%), radial-gradient(circle at bottom right, rgba(155,123,255,0.04) 0%, transparent 60%); z-index: -2; }
-.float-shape{ position:fixed; width:200px; height:200px; border-radius:50%; z-index:-3; opacity:0.1; filter: blur(80px); }
-.s1{ top:5vh; left:5vw; background:var(--accent-green); }
-.s2{ bottom:5vh; right:5vw; background:var(--accent-purple); }
-
-/* NAVBAR */
-.navbar{
-  position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:12px; padding:14px; 
-  backdrop-filter: blur(8px) saturate(1.05); 
-  background: linear-gradient(180deg, rgba(4,6,8,0.35), rgba(6,8,10,0.18));
-  border-bottom: var(--glass-border);
-}
-.navbar h1{ font-size:1.05rem; margin:0; }
-.navbar .btn{ font-size:1.4rem; font-weight:900; padding:4px 8px; background:none; border:none; color:var(--text); cursor:pointer; transition: transform 0.2s ease; }
-#search{ margin-left:auto; width:48%; max-width:420px; padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03);
-  background: rgba(255,255,255,0.016); color:var(--text); outline:none; box-shadow: 0 6px 18px rgba(4,6,8,0.5); }
-#search.hidden { display:none!important; }
-
-/* Brand Filters (Chips) */
-.brand-filters{
-  margin:0 auto; max-width:980px; padding:10px 14px 10px;
-  display:flex; flex-wrap:nowrap; gap:8px; overflow-x:auto;
-  border-bottom: var(--glass-border);
-  z-index:9;
-}
-.brand-filters.hidden { display:none!important; }
-.brand-chip{ flex:0 0 auto; padding:8px 12px; border-radius:999px; background: rgba(255,255,255,0.012); color:var(--muted); font-weight:700; font-size:0.88rem; border:1px solid rgba(255,255,255,0.02); cursor:pointer; }
-.brand-chip.active{ color:#08130b; background: linear-gradient(90deg, var(--accent-green), var(--accent-green-2)); box-shadow: 0 12px 40px rgba(34,255,136,0.12); border: none; }
-
-
-/* LIST VIEW (Компактный и Стильный) */
-main{ max-width:980px; margin:16px auto; padding:0 16px; z-index:10; }
-
-.group h2{
-  margin:20px 0 8px; font-size:1.05rem; color:var(--text);
-  font-family: 'Consolas', monospace; /* Terminal font for section titles */
-  text-shadow: 0 0 6px rgba(34,255,136,0.5);
-}
-.list{ 
-  display:flex; flex-direction:column; gap:8px; /* Чуть более компактный список */
-}
-.list .item{
-  display:flex; justify-content:space-between; align-items:center;
-  padding:10px 14px; /* Уменьшенный вертикальный отступ */
-  border-radius:10px; 
-  background: var(--card);
-  border:var(--glass-border);
-  cursor:pointer;
-  transition: transform 0.2s, box-shadow 0.3s;
-  /* Добавим свечение при наведении */
-  box-shadow: 0 0 0 0 rgba(34,255,136,0.1); 
-}
-.list .item:hover{
-  transform: translateY(-2px);
-  /* Сильный хакерский эффект при наведении */
-  box-shadow: 0 0 10px rgba(34,255,136,0.4), var(--shadow);
-}
-.list .meta{
-  flex-grow:1;
-}
-.list .model{
-  font-size:1.0rem; font-weight:800; line-height:1.2; 
-}
-.list .codename{
-  font-size:0.8rem; 
-  color:var(--accent-green); /* Кодовое название в ярком зеленом */
-  margin-top:2px;
-  font-family: 'Consolas', monospace; /* Моноширинный шрифт */
-  text-shadow: 0 0 4px rgba(34,255,136,0.8);
-}
-.list .pill{ padding:5px 10px; border-radius:999px; font-size:0.75rem; font-weight:700; border:1px solid; cursor:pointer; margin-left:8px; }
-.list .issue-pill[data-issue="imei"]{ background:rgba(34,255,136,0.1); color:var(--accent-green); border-color:rgba(34,255,136,0.3); }
-.list .issue-pill[data-issue="frp"]{ background:rgba(255,107,177,0.1); color:var(--accent-pink); border-color:rgba(255,107,177,0.3); }
-.list .issue-pill[data-issue="dead"]{ background:rgba(155,123,255,0.1); color:var(--accent-purple); border-color:rgba(155,123,255,0.3); }
-
-/* DETAIL VIEW (unchanged layout, just for reference) */
-.detail{
-  position:fixed; top:0; bottom:0; left:0; right:0; z-index:20; 
-  background: rgba(6,7,9,0.95); 
-  backdrop-filter: blur(4px);
-  padding-top: 60px; 
-  overflow-y:auto; 
-}
-.detail-content{
-  max-width:800px; width:100%; margin:0 auto; padding:20px 16px 100px 16px;
-}
-.detail h2{ font-size:1.5rem; color:var(--text); text-shadow: 0 0 16px rgba(34,255,136,0.1); }
-.instructions{
-  background: var(--panel); border-radius:var(--radius); 
-  padding:16px; white-space: pre-wrap; word-wrap: break-word;
-  font-size: 1rem; line-height: 1.6; border:var(--glass-border);
-  box-shadow: 0 8px 30px rgba(4,6,8,0.5);
-}
-
-
-/* FOOTER & BUTTONS */
-.footer{
-  position:fixed; left:0; right:0; bottom:0; display:flex; flex-direction:column; 
-  padding:10px 14px; 
-  background: linear-gradient(180deg, rgba(6,8,10,0.4), rgba(6,8,10,0.9));
-  backdrop-filter: blur(10px); z-index:100; border-top:var(--glass-border);
-}
-
-/* ---------------------------------- */
-/* НОВАЯ КРАСИВАЯ КНОПКА КОПИРОВАНИЯ TG */
-/* ---------------------------------- */
-.copy-tg-btn {
-  padding: 8px 14px;
-  border-radius: 6px; 
-  border: 2px solid var(--accent-green-2);
-  cursor: pointer;
-  color: var(--bg); /* Черный текст на зеленом фоне */
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-family: 'Consolas', monospace; /* Моноширинный текст */
-  /* Агрессивный хакерский стиль с сильным свечением */
-  background: var(--accent-green);
-  box-shadow: 0 0 20px rgba(34, 255, 136, 0.6);
-  transition: background 0.1s, transform 0.1s, box-shadow 0.3s;
-  line-height: 1; /* Компактность */
-}
-
-.copy-tg-btn:hover {
-  background: var(--accent-green-2);
-  transform: translateY(-1px);
-  box-shadow: 0 0 25px var(--accent-green-2);
-}
-
-/* Кнопки футера (Главная/О приложении) */
-.footer .nav-btn{
-  padding:8px 16px; border-radius:10px; border:none; cursor:pointer;
-  background: var(--glass); color:var(--muted); font-weight:600; font-size:0.9rem; transition: background 0.2s, color 0.2s;
-}
-.footer .nav-btn.active{
-  background: var(--accent-green-2); color:var(--bg); font-weight:700;
-}
-.nav-btn.small {
-    padding: 6px 12px;
-}
-
-/* utility */
-.hidden{ display:none!important; }
-.center{ text-align:center; padding:14px; color:var(--muted); }
-.glow-title{ color:var(--accent-green); text-shadow: 0 12px 40px rgba(34,255,136,0.08); }
-
-:root{
-  --bg: #060709;
-  --panel:#0f1416;
-  --card: linear-gradient(180deg, rgba(18,22,20,0.72), rgba(8,10,12,0.62));
-  --glass: rgba(255,255,255,0.02);
-  --text: #eaffef;
-  --muted: #a9cbb3;
-  --accent-green: #22ff88;    /* основной зелёный */
-  --accent-green-2: #16d67a;  /* вторичный зелёный */
-  --accent-purple: #9b7bff;
-  --accent-pink: #ff6bb1;
-  --accent-cyan: #5ce3ff;
+  --accent-cyan: #5ce3ff; 
   --accent-gradient: linear-gradient(90deg, var(--accent-green), var(--accent-purple));
   --radius: 14px;
   --shadow: 0 8px 26px rgba(4,6,8,0.72);
@@ -564,207 +31,19 @@ body{
 a{ color:var(--accent-green-2); text-decoration:none; }
 a:hover{ text-decoration:underline; }
 
-/* Background elements */
-.bg-gradient{ position:fixed; top:0; left:0; right:0; bottom:0; background: radial-gradient(circle at top left, rgba(34,255,136,0.04) 0%, transparent 40%), radial-gradient(circle at bottom right, rgba(155,123,255,0.04) 0%, transparent 60%); z-index: -2; }
-.float-shape{ position:fixed; width:200px; height:200px; border-radius:50%; z-index:-3; opacity:0.1; filter: blur(80px); }
-.s1{ top:5vh; left:5vw; background:var(--accent-green); }
-.s2{ bottom:5vh; right:5vw; background:var(--accent-purple); }
-
-/* NAVBAR */
-.navbar{
-  position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:12px; padding:14px; 
-  backdrop-filter: blur(8px) saturate(1.05); 
-  background: linear-gradient(180deg, rgba(4,6,8,0.35), rgba(6,8,10,0.18));
-  border-bottom: var(--glass-border);
-}
-.navbar h1{ font-size:1.05rem; margin:0; }
-.navbar .btn{ font-size:1.4rem; font-weight:900; padding:4px 8px; background:none; border:none; color:var(--text); cursor:pointer; transition: transform 0.2s ease; }
-#search{ margin-left:auto; width:48%; max-width:420px; padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03);
-  background: rgba(255,255,255,0.016); color:var(--text); outline:none; box-shadow: 0 6px 18px rgba(4,6,8,0.5); }
-#search.hidden { display:none!important; }
-
-/* Brand Filters (Chips) */
-.brand-filters{
-  margin:0 auto; max-width:980px; padding:10px 14px 10px;
-  display:flex; flex-wrap:nowrap; gap:8px; overflow-x:auto;
-  border-bottom: var(--glass-border);
-  z-index:9;
-}
-.brand-filters.hidden { display:none!important; }
-.brand-chip{ flex:0 0 auto; padding:8px 12px; border-radius:999px; background: rgba(255,255,255,0.012); color:var(--muted); font-weight:700; font-size:0.88rem; border:1px solid rgba(255,255,255,0.02); cursor:pointer; }
-.brand-chip.active{ color:#08130b; background: linear-gradient(90deg, var(--accent-green), var(--accent-green-2)); box-shadow: 0 12px 40px rgba(34,255,136,0.12); border: none; }
-
-
-/* LIST VIEW (Компактный и Стильный) */
-main{ max-width:980px; margin:16px auto; padding:0 16px; z-index:10; }
-
-.group h2{
-  margin:20px 0 8px; font-size:1.05rem; color:var(--text);
-  font-family: 'Consolas', monospace; /* Terminal font for section titles */
-  text-shadow: 0 0 6px rgba(34,255,136,0.5);
-}
-.list{ 
-  display:flex; flex-direction:column; gap:8px; 
-}
-.list .item{
-  display:flex; justify-content:space-between; align-items:center;
-  padding:10px 14px; 
-  border-radius:10px; 
-  background: var(--card);
-  border:var(--glass-border);
-  cursor:pointer;
-  transition: transform 0.2s, box-shadow 0.3s;
-  box-shadow: 0 0 0 0 rgba(34,255,136,0.1); 
-}
-.list .item:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(34,255,136,0.4), var(--shadow);
-}
-.list .meta{
-  flex-grow:1;
-}
-.list .model{
-  font-size:1.0rem; font-weight:800; line-height:1.2; 
-}
-.list .codename{
-  font-size:0.8rem; 
-  color:var(--accent-green); 
-  margin-top:2px;
-  font-family: 'Consolas', monospace; 
-  text-shadow: 0 0 4px rgba(34,255,136,0.8);
-}
-.list .pill{ padding:5px 10px; border-radius:999px; font-size:0.75rem; font-weight:700; border:1px solid; cursor:pointer; margin-left:8px; }
-.list .issue-pill[data-issue="imei"]{ background:rgba(34,255,136,0.1); color:var(--accent-green); border-color:rgba(34,255,136,0.3); }
-.list .issue-pill[data-issue="frp"]{ background:rgba(255,107,177,0.1); color:var(--accent-pink); border-color:rgba(255,107,177,0.3); }
-.list .issue-pill[data-issue="dead"]{ background:rgba(155,123,255,0.1); color:var(--accent-purple); border-color:rgba(155,123,255,0.3); }
-
-/* DETAIL VIEW */
-.detail{
-  position:fixed; top:0; bottom:0; left:0; right:0; z-index:20; 
-  background: rgba(6,7,9,0.95); 
-  backdrop-filter: blur(4px);
-  padding-top: 60px; 
-  overflow-y:auto; 
-}
-.detail-content{
-  max-width:800px; width:100%; margin:0 auto; padding:20px 16px 100px 16px;
-}
-.detail h2{ font-size:1.5rem; color:var(--text); text-shadow: 0 0 16px rgba(34,255,136,0.1); }
-.detail .meta{ color:var(--muted); margin-bottom:16px; font-size:0.95rem; }
-.instructions{
-  background: var(--panel); border-radius:var(--radius); 
-  padding:16px; white-space: pre-wrap; word-wrap: break-word;
-  font-size: 1rem; line-height: 1.6; border:var(--glass-border);
-  box-shadow: 0 8px 30px rgba(4,6,8,0.5);
-}
-
-
-/* FOOTER & BUTTONS */
-.footer{
-  position:fixed; left:0; right:0; bottom:0; display:flex; flex-direction:column; 
-  padding:10px 14px; 
-  background: linear-gradient(180deg, rgba(6,8,10,0.4), rgba(6,8,10,0.9));
-  backdrop-filter: blur(10px); z-index:100; border-top:var(--glass-border);
-}
-
-/* НОВАЯ КРАСИВАЯ КНОПКА КОПИРОВАНИЯ TG */
-.copy-tg-btn {
-  padding: 8px 14px;
-  border-radius: 6px; 
-  border: 2px solid var(--accent-green-2);
-  cursor: pointer;
-  color: var(--bg); 
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-family: 'Consolas', monospace; 
-  background: var(--accent-green);
-  box-shadow: 0 0 20px rgba(34, 255, 136, 0.6);
-  transition: background 0.1s, transform 0.1s, box-shadow 0.3s;
-  line-height: 1; 
-}
-
-.copy-tg-btn:hover {
-  background: var(--accent-green-2);
-  transform: translateY(-1px);
-  box-shadow: 0 0 25px var(--accent-green-2);
-}
-
-/* Кнопки футера (Главная/О приложении) */
-.footer .nav-btn{
-  padding:8px 16px; border-radius:10px; border:none; cursor:pointer;
-  background: var(--glass); color:var(--muted); font-weight:600; font-size:0.9rem; transition: background 0.2s, color 0.2s;
-}
-.footer .nav-btn.active{
-  background: var(--accent-green-2); color:var(--bg); font-weight:700;
-}
-.nav-btn.small {
-    padding: 6px 12px;
-}
-
-/* utility */
-.hidden{ display:none!important; }
-.center{ text-align:center; padding:14px; color:var(--muted); }
-.glow-title{ color:var(--accent-green); text-shadow: 0 12px 40px rgba(34,255,136,0.08); }
-
-@media (max-width:640px){
-  .navbar h1 { font-size:1.2rem; }
-  .detail { padding-top: 50px; }
-  .detail-content { padding-bottom: 90px; }
-  .list .item{ padding: 8px 12px; }
-  .list .model{ font-size: 0.95rem; }
-  .list .codename{ font-size: 0.75rem; }
-}
-
-
-
-:root{
-  --bg: #060709;
-  --panel:#0f1416;
-  --card: linear-gradient(180deg, rgba(18,22,20,0.72), rgba(8,10,12,0.62));
-  --glass: rgba(255,255,255,0.02);
-  --text: #eaffef;
-  --muted: #a9cbb3;
-  --accent-green: #22ff88;    /* основной зелёный */
-  --accent-green-2: #16d67a;  /* вторичный зелёный */
-  --accent-purple: #9b7bff;
-  --accent-pink: #ff6bb1;
-  --accent-cyan: #5ce3ff; /* Новый акцент для фона */
-  --accent-gradient: linear-gradient(90deg, var(--accent-green), var(--accent-purple));
-  --radius: 14px;
-  --shadow: 0 8px 26px rgba(4,6,8,0.72);
-  --glass-border: 1px solid rgba(255,255,255,0.03);
-  font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
-}
-
-/* Page base and background */
-html,body{height:100%}
-body{
-  margin:0;
-  min-height:100vh;
-  color:var(--text);
-  -webkit-font-smoothing: antialiased;
-  background-color: var(--bg);
-  padding-bottom: 96px; 
-  position:relative;
-}
-a{ color:var(--accent-green-2); text-decoration:none; }
-a:hover{ text-decoration:underline; }
-
-/* Background elements */
-.bg-gradient{ position:fixed; top:0; left:0; right:0; bottom:0; background: radial-gradient(circle at top left, rgba(34,255,136,0.04) 0%, transparent 40%), radial-gradient(circle at bottom right, rgba(155,123,255,0.04) 0%, transparent 60%); z-index: -2; }
-.float-shape{ position:fixed; width:200px; height:200px; border-radius:50%; z-index:-3; opacity:0.1; filter: blur(80px); }
-.s1{ top:5vh; left:5vw; background:var(--accent-green); }
-.s2{ bottom:5vh; right:5vw; background:var(--accent-purple); }
+/* Background elements: Убраны float-shape и градиенты для эффекта "Матрицы" */
+.bg-gradient{ display:none; }
+.float-shape{ display:none; }
 
 /* ---------------------------------- */
-/* Стили для Canvas (частицы) */
+/* Стили для Canvas (эффект "Матрицы") */
 /* ---------------------------------- */
 #bgCanvas{
   position:fixed; top:0; left:0; z-index:-1; pointer-events:none; 
-  opacity:0.8; /* Увеличиваем непрозрачность для более грозного вида */
-  /* Агрессивный хакерский глитч/свечение */
-  filter: saturate(1.2) contrast(1.1) drop-shadow(0 0 10px rgba(92, 227, 255, 0.5)); 
-  transition: opacity 1s linear; /* Плавное появление */
+  opacity:0.9; 
+  /* Сильное зеленое свечение для эффекта "Матрицы" */
+  filter: saturate(1.5) contrast(1.1) drop-shadow(0 0 10px rgba(34, 255, 136, 0.7)); 
+  transition: opacity 1s linear; 
 }
 
 /* NAVBAR */
@@ -830,10 +109,60 @@ main{ max-width:980px; margin:16px auto; padding:0 16px; z-index:10; }
   font-family: 'Consolas', monospace; 
   text-shadow: 0 0 4px rgba(34,255,136,0.8);
 }
-.list .pill{ padding:5px 10px; border-radius:999px; font-size:0.75rem; font-weight:700; border:1px solid; cursor:pointer; margin-left:8px; }
-.list .issue-pill[data-issue="imei"]{ background:rgba(34,255,136,0.1); color:var(--accent-green); border-color:rgba(34,255,136,0.3); }
-.list .issue-pill[data-issue="frp"]{ background:rgba(255,107,177,0.1); color:var(--accent-pink); border-color:rgba(255,107,177,0.3); }
-.list .issue-pill[data-issue="dead"]{ background:rgba(155,123,255,0.1); color:var(--accent-purple); border-color:rgba(155,123,255,0.3); }
+
+/* ---------------------------------- */
+/* Стили для КНОПОК-ПИЛЛОВ (Pill Buttons) */
+/* ---------------------------------- */
+.list .pill, 
+.detail .issue-pill { 
+  padding:6px 11px; /* Сделали чуть больше */
+  border-radius:999px; 
+  font-size:0.75rem; 
+  font-weight:700; 
+  border:2px solid; /* Более толстый бордер */
+  cursor:pointer; 
+  margin-left:8px; 
+  font-family: 'Consolas', monospace; /* Консольный шрифт */
+  text-shadow: 0 0 2px currentColor; /* Мягкое свечение текста */
+  transition: all 0.2s ease-in-out; 
+}
+
+/* IMEI (Зеленый) */
+.list .issue-pill[data-issue="imei"], 
+.detail .issue-pill[data-issue="imei"] { 
+    background:rgba(34,255,136,0.15); /* Темнее фон */
+    color:var(--accent-green); 
+    border-color:var(--accent-green-2); /* Чистый цвет бордера */
+    /* Внутреннее и внешнее свечение */
+    box-shadow: inset 0 0 8px rgba(34,255,136,0.2), 0 0 5px rgba(34,255,136,0.4); 
+}
+
+/* FRP (Розовый) */
+.list .issue-pill[data-issue="frp"], 
+.detail .issue-pill[data-issue="frp"] { 
+    background:rgba(255,107,177,0.15); 
+    color:var(--accent-pink); 
+    border-color:var(--accent-pink);
+    box-shadow: inset 0 0 8px rgba(255,107,177,0.2), 0 0 5px rgba(255,107,177,0.4);
+}
+
+/* DEAD (Фиолетовый) */
+.list .issue-pill[data-issue="dead"], 
+.detail .issue-pill[data-issue="dead"] { 
+    background:rgba(155,123,255,0.15); 
+    color:var(--accent-purple); 
+    border-color:var(--accent-purple);
+    box-shadow: inset 0 0 8px rgba(155,123,255,0.2), 0 0 5px rgba(155,123,255,0.4);
+}
+
+/* Эффект при наведении (Сильное свечение и увеличение) */
+.list .issue-pill:hover,
+.detail .issue-pill:hover {
+    transform: scale(1.05); /* Легкий "поп" */
+    filter: brightness(1.2); /* Сделать ярче */
+    /* Сильное свечение, зависящее от цвета (currentColor) */
+    box-shadow: inset 0 0 10px currentColor, 0 0 15px currentColor; 
+}
 
 /* DETAIL VIEW */
 .detail{
