@@ -1,13 +1,10 @@
 // site/script.js
-// Показывает ТОЛЬКО существующие категории (IMEI/FRP/DEAD) в карточке модели.
-// Fetch деталей только при клике на существующую кнопку.
-// Зависит от генерации list.json скриптом upload.py
 
 (() => {
   'use strict';
 
   /* ---------------------------
-     Background particles canvas (оптимизировано)
+     Background particles canvas (Усиленный хакерский эффект)
      --------------------------- */
   (function initBackgroundCanvas() {
     try {
@@ -27,16 +24,22 @@
       ctx.scale(DPR, DPR);
 
       const particles = [];
-      const PARTICLE_COUNT = Math.max(12, Math.floor((w * h) / 110000));
+      // Увеличенная плотность для "грозной сети"
+      const PARTICLE_COUNT = Math.max(30, Math.floor((w * h) / 70000)); 
+      const MAX_SPEED = 0.5; // Увеличенная скорость
+      const BASE_ALPHA = 0.08;
+      const MAX_FLICKER = 0.3;
+      
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         particles.push({
           x: Math.random() * w,
           y: Math.random() * h,
-          r: 1 + Math.random() * 3,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          hue: Math.random() * 360,
-          alpha: 0.04 + Math.random() * 0.12
+          r: 1 + Math.random() * 2,
+          vx: (Math.random() - 0.5) * MAX_SPEED,
+          vy: (Math.random() - 0.5) * MAX_SPEED,
+          // Ограничение цвета: от Синего (240) до Циана (180)
+          hue: 180 + Math.random() * 60, 
+          alpha: BASE_ALPHA + Math.random() * 0.05
         });
       }
 
@@ -45,36 +48,44 @@
         return /Android|iPhone|iPad|Mobi/i.test(ua);
       }
       if (shouldThrottle()) {
-        for (let p of particles) { p.vx *= 0.45; p.vy *= 0.45; }
-        if (w < 600) particles.splice(Math.floor(particles.length / 2));
+        for (let p of particles) { p.vx *= 0.3; p.vy *= 0.3; }
+        if (w < 600) particles.splice(Math.floor(particles.length / 3));
       }
 
       let last = performance.now();
       function draw(now) {
         const dt = Math.min(40, now - last);
         last = now;
-        ctx.clearRect(0, 0, w, h);
+        
+        // Более темное фоновое перекрытие для эффекта "шлейфа" (trail effect)
+        ctx.fillStyle = 'rgba(6, 7, 9, 0.06)'; 
+        ctx.fillRect(0, 0, w, h);
+        
         for (let p of particles) {
           p.x += p.vx * (dt / 16);
           p.y += p.vy * (dt / 16);
-          if (p.x < -20) p.x = w + 20;
-          if (p.x > w + 20) p.x = -20;
-          if (p.y < -20) p.y = h + 20;
-          if (p.y > h + 20) p.y = -20;
+          if (p.x < -10) p.x = w + 10;
+          if (p.x > w + 10) p.x = -10;
+          if (p.y < -10) p.y = h + 10;
+          if (p.y > h + 10) p.y = -10;
 
-          const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 10);
-          grd.addColorStop(0, `hsla(${(p.hue + 160) % 360}, 90%, 60%, ${p.alpha})`);
-          grd.addColorStop(0.5, `hsla(${(p.hue + 100) % 360}, 80%, 50%, ${p.alpha * 0.5})`);
-          grd.addColorStop(1, `hsla(${p.hue % 360}, 80%, 50%, 0)`);
+          // Усиленный синий/циановый градиент
+          const hue = 180; // Основной цвет Cyan (180)
+          const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 8); 
+          grd.addColorStop(0, `hsla(${hue}, 100%, 70%, ${p.alpha * 1.5})`); // Более яркий центр
+          grd.addColorStop(0.5, `hsla(${hue}, 80%, 50%, ${p.alpha * 0.8})`);
+          grd.addColorStop(1, `hsla(${hue}, 80%, 50%, 0)`);
           ctx.beginPath();
           ctx.fillStyle = grd;
-          ctx.arc(p.x, p.y, p.r * 10, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, p.r * 8, 0, Math.PI * 2);
           ctx.fill();
         }
-        if (Math.random() > 0.985) {
+        
+        // Более агрессивный/частый рандомный фликер
+        if (Math.random() > 0.95) { 
           const i = Math.floor(Math.random() * particles.length);
-          particles[i].alpha = 0.25 + Math.random() * 0.25;
-          setTimeout(() => { particles[i].alpha = 0.04 + Math.random() * 0.12; }, 300 + Math.random() * 800);
+          particles[i].alpha = BASE_ALPHA + MAX_FLICKER; // Яркое мерцание
+          setTimeout(() => { particles[i].alpha = BASE_ALPHA + Math.random() * 0.05; }, 100 + Math.random() * 300);
         }
         requestAnimationFrame(draw);
       }
@@ -104,6 +115,7 @@
   const ABOUT_BTN = document.getElementById('aboutBtn'); 
   const LIST_EL = document.getElementById('list');
   const DETAIL_EL = document.getElementById('detail');
+  const DETAIL_CONTENT = document.querySelector('.detail-content');
   const SEARCH = document.getElementById('search');
   const BRAND_FILTERS = document.getElementById('brandFilters');
   const TG_COPY_BTN_ID = 'tgCopyBtn';
@@ -144,7 +156,6 @@
     if (!path) return {};
     const parts = path.split('/');
     const file = parts.pop();
-    // Brand is the folder name right before the file, assuming path is like data/phones_db/[brand]/file.json
     const brand = parts.length > 2 ? parts[parts.length - 1] : 'Other';
 
     // Regex to match: [model]-[codename]-[issue].json
@@ -152,13 +163,12 @@
     if (m) {
         return {
             brand: brand,
-            // Replace underscores with spaces for display
             model: (m[1] || '').replace(/_/g, ' '),
             codename: m[2],
             issue: m[3].toLowerCase()
         };
     }
-    // Fallback for files without codename in filename: [model]-[issue].json
+    // Fallback: [model]-[issue].json
     const m2 = file.match(/^(.*)-(imei|frp|dead)\.json$/i);
     if (m2) {
         return {
@@ -168,7 +178,6 @@
             issue: m2[2].toLowerCase()
         };
     }
-    // Catch-all (less useful)
     return { brand: brand, model: file.replace(/_/g, ' ').replace(/\.json$/, ''), codename: '', issue: '' };
   }
 
@@ -182,12 +191,10 @@
       const codename = parsed.codename || '';
       const issue = parsed.issue;
 
-      // Skip paths that don't match the required issue pattern (imei/frp/dead)
       if (!issue || !['imei','frp','dead'].includes(issue)) return;
 
       if (!aggregatedByBrand[brand]) aggregatedByBrand[brand] = {};
 
-      // Key model by brand + model name + codename to group different issues for the same phone
       const key = `${brand}||${model}||${codename}`;
 
       if (!aggregatedByBrand[brand][key]) {
@@ -199,7 +206,6 @@
         };
       }
 
-      // Add the file path to the corresponding issue slot
       aggregatedByBrand[brand][key].issues[issue] = path;
     });
 
@@ -217,14 +223,14 @@
     BRAND_FILTERS.innerHTML = '';
     const brands = Object.keys(aggregatedByBrand).sort((a,b)=> a.localeCompare(b,'ru',{sensitivity:'base'}));
     const allChip = makeChip('Все', true);
-    allChip.addEventListener('click', () => { activeBrand = null; updateActiveChips(); renderList(SEARCH.value || ''); });
+    allChip.addEventListener('click', () => { activeBrand = null; updateActiveChips(); window.renderList(SEARCH.value || ''); });
     BRAND_FILTERS.appendChild(allChip);
     brands.forEach(brand => {
       const chip = makeChip(brand, false);
       chip.addEventListener('click', () => {
         activeBrand = (activeBrand === brand) ? null : brand;
         updateActiveChips();
-        renderList(SEARCH.value || '');
+        window.renderList(SEARCH.value || '');
       });
       BRAND_FILTERS.appendChild(chip);
     });
@@ -249,12 +255,14 @@
     });
   }
 
-  // Render list: only available issue buttons are shown (no muted placeholders)
-  function renderList(filter = '') {
+  // Render list (Accessible globally via window.renderList)
+  window.renderList = function(filter = '') {
+    // Восстанавливаем состояние Главной страницы
     DETAIL_EL.classList.add('hidden'); 
     BACK_BTN.classList.add('hidden'); 
     LIST_EL.classList.remove('hidden');
-    
+    SEARCH.classList.remove('hidden'); // Показать поиск
+    BRAND_FILTERS.classList.remove('hidden'); // Показать фильтры
     HOME_BTN?.classList.add('active'); 
     ABOUT_BTN?.classList.remove('active'); 
     
@@ -276,7 +284,8 @@
       if (visibleModels.length === 0) return;
 
       const groupEl = document.createElement('div'); groupEl.className = 'group';
-      const title = document.createElement('h2'); title.textContent = brand; groupEl.appendChild(title);
+      // Хакерский стиль для заголовка
+      const title = document.createElement('h2'); title.textContent = `[ ${brand.toUpperCase()} ]`; groupEl.appendChild(title);
       const list = document.createElement('div'); list.className = 'list';
 
       visibleModels.forEach(m => {
@@ -285,7 +294,8 @@
 
         anyItems = true;
         const item = document.createElement('div'); item.className = 'item';
-        const metaHtml = `<div class="meta"><div class="model">${escapeHtml(m.model)}</div><div class="codename">${escapeHtml(m.codename || '')} · ${escapeHtml(m.cpu || 'CPU')}</div></div>`;
+        // Компактная мета-информация
+        const metaHtml = `<div class="meta"><div class="model">${escapeHtml(m.model)}</div><div class="codename">${escapeHtml(m.codename || 'no_codename')} · ${escapeHtml(m.cpu || 'CPU')}</div></div>`;
         
         let issuesHtml = '<div style="display:flex;gap:8px;align-items:center">';
         for (const issue of ['imei','frp','dead']) {
@@ -298,13 +308,11 @@
         issuesHtml += '</div>';
         item.innerHTML = metaHtml + issuesHtml;
 
-        // click on whole item opens model panel (shows only existing categories)
         item.addEventListener('click', (ev) => {
           if (ev.target.closest('.issue-pill')) return; 
           openModelPanel(m);
         });
 
-        // issue button handlers (fetch only on click)
         item.querySelectorAll('.issue-pill.available').forEach(btn => {
           btn.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -325,7 +333,7 @@
       const brandText = activeBrand ? ` в "${activeBrand}"` : '';
       LIST_EL.innerHTML = `<div class="center">Ничего не найдено по запросу «${filter}»${brandText}.</div>`;
     }
-  }
+  };
 
   // open model panel: shows header + only existing category buttons
   function openModelPanel(model) {
@@ -333,23 +341,30 @@
     const state = { view: 'model', modelKey };
     history.pushState(state, '', `#model-${encodeURIComponent(modelKey)}`);
     
+    // UI state management
     LIST_EL.classList.add('hidden'); 
     DETAIL_EL.classList.remove('hidden'); 
     BACK_BTN.classList.remove('hidden');
-    
+    SEARCH.classList.add('hidden'); // Скрыть поиск
+    BRAND_FILTERS.classList.add('hidden'); // Скрыть фильтры
     HOME_BTN?.classList.remove('active'); 
     ABOUT_BTN?.classList.remove('active'); 
 
     const availableCount = Object.keys(model.issues || {}).length;
-    DETAIL_EL.innerHTML = `
-      <h2>${escapeHtml(model.brand)} — ${escapeHtml(model.model)}</h2>
-      <div class="meta">codename: ${escapeHtml(model.codename || '')} · cpu: ${escapeHtml(model.cpu || 'CPU')}</div>
+    DETAIL_CONTENT.innerHTML = `
+      <h2 class="glow-title">${escapeHtml(model.brand)} — ${escapeHtml(model.model)}</h2>
+      <div class="meta">codename: ${escapeHtml(model.codename || 'no_codename')} · cpu: ${escapeHtml(model.cpu || 'CPU')}</div>
       <div style="margin-top:8px">${buildIssueButtonsHtml(model)}</div>
-      <p style="margin-top:12px;color:var(--muted)">Нажмите на категорию чтобы загрузить инструкцию. Найдено файлов: ${availableCount}</p>
+      <p style="margin-top:12px;color:var(--muted)">[//] Нажмите на категорию чтобы загрузить инструкцию. Найдено файлов: ${availableCount}</p>
+      
+      <div style="margin-top:20px;display:flex;gap:8px;align-items:center">
+        <button id="${TG_COPY_BTN_ID}" class="copy-tg-btn">[C] Copy TG Handle</button>
+        <a class="nav-btn small" href="https://t.me/ill_hack_you" target="_blank" rel="noopener">@ill_hack_you</a>
+      </div>
     `;
 
     // wire buttons
-    DETAIL_EL.querySelectorAll('.issue-pill.available').forEach(btn => {
+    DETAIL_CONTENT.querySelectorAll('.issue-pill.available').forEach(btn => {
       btn.addEventListener('click', (ev) => {
         ev.preventDefault(); ev.stopPropagation();
         const path = decodeURIComponent(btn.dataset.path);
@@ -358,13 +373,17 @@
       });
     });
 
-    // TG copy
-    const copyDiv = document.createElement('div');
-    copyDiv.style.marginTop = '10px';
-    copyDiv.innerHTML = `<button id="${TG_COPY_BTN_ID}" class="nav-btn small">Копировать TG</button> <a class="nav-btn small" href="https://t.me/ill_hack_you" target="_blank" rel="noopener">@ill_hack_you</a>`;
-    DETAIL_EL.appendChild(copyDiv);
+    // TG copy handler
     const copyBtn = document.getElementById(TG_COPY_BTN_ID);
-    if (copyBtn) copyBtn.addEventListener('click', async () => { try { await navigator.clipboard.writeText(TG_HANDLE); copyBtn.textContent = 'Скопировано!'; setTimeout(()=>copyBtn.textContent='Копировать TG',1400); } catch(e){ window.prompt('Скопируй вручную:', TG_HANDLE); } });
+    if (copyBtn) copyBtn.addEventListener('click', async () => { 
+        try { 
+            await navigator.clipboard.writeText(TG_HANDLE); 
+            copyBtn.textContent = '[DONE] Скопировано!'; 
+            setTimeout(()=> copyBtn.textContent='[C] Copy TG Handle',1400); 
+        } catch(e){ 
+            window.prompt('Скопируй вручную:', TG_HANDLE); 
+        } 
+    });
   }
 
   function buildIssueButtonsHtml(model) {
@@ -381,9 +400,11 @@
 
   // open specific issue detail (fetch on demand)
   async function openIssueDetail(details_path, model, issue) {
-    DETAIL_EL.innerHTML = `<div class="center">Загрузка инструкции ${issue.toUpperCase()}…</div>`;
-    HOME_BTN?.classList.remove('active'); 
-    ABOUT_BTN?.classList.remove('active');
+    DETAIL_CONTENT.innerHTML = `<div class="center">Загрузка инструкции ${issue.toUpperCase()}…</div>`;
+    
+    // UI state management (hide non-essential elements)
+    SEARCH.classList.add('hidden');
+    BRAND_FILTERS.classList.add('hidden');
 
     try {
       const cacheKey = details_path;
@@ -395,12 +416,10 @@
       }
       const data = await fetchJson(details_path, 9000);
       const detail = {
-        brand: data.brand || model.brand,
-        model: data.model || model.model,
-        codename: data.codename || model.codename,
-        cpu: data.cpu || model.cpu || 'Unknown', 
-        issue: data.issue || issue,
-        instructions: data.instructions || data.text || 'Инструкции не найдены',
+        details_path,
+        brand: data.brand || model.brand, model: data.model || model.model,
+        codename: data.codename || model.codename, cpu: data.cpu || model.cpu || 'Unknown', 
+        issue: data.issue || issue, instructions: data.instructions || data.text || 'Инструкции не найдены',
         raw: data
       };
       model.cpu = detail.cpu;
@@ -409,7 +428,7 @@
       renderDetail(detail, model, issue);
     } catch (err) {
       console.error('openIssueDetail error', err);
-      DETAIL_EL.innerHTML = `<div class="center">Не удалось загрузить детали. Проверь структуру файлов или путь: ${escapeHtml(details_path)}</div>`;
+      DETAIL_CONTENT.innerHTML = `<div class="center">Не удалось загрузить детали. Проверь структуру файлов или путь: ${escapeHtml(details_path)}</div>`;
     }
   }
 
@@ -417,6 +436,7 @@
     try {
       const toStore = Object.create(null);
       for (const [k,v] of detailsCache.entries()) {
+        // Сохраняем только необходимые поля для быстрого кэша
         toStore[k] = { brand:v.brand, model:v.model, codename:v.codename, cpu:v.cpu, issue:v.issue, instructions:v.instructions };
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
@@ -424,68 +444,61 @@
   }
 
   function renderDetail(detail, model, issue) {
-    // Обновляем хэш истории для прямого доступа к инструкции
-    const modelKey = `${model.brand}||${model.model}||${model.codename}`;
-    const state = { view: 'detail', modelKey, details_path: detail.details_path || model.issues[issue] };
+    // Обновляем хэш истории
+    const state = { view: 'detail', details_path: detail.details_path || model.issues[issue] };
     history.pushState(state, '', `#${state.details_path}`);
     
+    // UI state management
+    LIST_EL.classList.add('hidden');
+    DETAIL_EL.classList.remove('hidden');
+    BACK_BTN.classList.remove('hidden');
+
     const safeInstructions = (detail.instructions || '').replace(/\n/g, '<br>');
-    DETAIL_EL.innerHTML = `
-      <h2>${escapeHtml(detail.brand)} — ${escapeHtml(detail.model)}</h2>
-      <div class="meta">codename: ${escapeHtml(detail.codename || '')} · cpu: ${escapeHtml(detail.cpu || '')} · issue: ${escapeHtml(detail.issue || issue)}</div>
+    DETAIL_CONTENT.innerHTML = `
+      <h2 class="glow-title">${escapeHtml(detail.brand)} — ${escapeHtml(detail.model)}</h2>
+      <div class="meta">codename: ${escapeHtml(detail.codename || 'no_codename')} · cpu: ${escapeHtml(detail.cpu || 'Unknown')} · issue: ${escapeHtml(detail.issue || issue)}</div>
       <div class="instructions">${safeInstructions}</div>
       <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
-        <button id="${TG_COPY_BTN_ID}" class="nav-btn small">Копировать TG</button>
+        <button id="${TG_COPY_BTN_ID}" class="copy-tg-btn">[C] Copy TG Handle</button>
         <a class="nav-btn small" href="https://t.me/ill_hack_you" target="_blank" rel="noopener noreferrer">Открыть @ill_hack_you</a>
       </div>
     `;
+    // TG copy handler
     document.getElementById(TG_COPY_BTN_ID)?.addEventListener('click', async () => { 
         try { 
             await navigator.clipboard.writeText(TG_HANDLE); 
             const b = document.getElementById(TG_COPY_BTN_ID); 
-            b.textContent='Скопировано!'; 
-            setTimeout(()=> b.textContent='Копировать TG',1400); 
+            b.textContent='[DONE] Скопировано!'; 
+            setTimeout(()=> b.textContent='[C] Copy TG Handle',1400); 
         } catch(e){ 
             window.prompt('Скопируй вручную:', TG_HANDLE); 
         } 
     });
   }
 
-  // history handling & Home button logic
-  function goToHome() {
-    DETAIL_EL.classList.add('hidden');
-    BACK_BTN.classList.add('hidden');
-    LIST_EL.classList.remove('hidden');
-    HOME_BTN?.classList.add('active'); 
-    ABOUT_BTN?.classList.remove('active'); 
-    history.pushState({ view: 'list' }, '', window.location.pathname); 
-    renderList(SEARCH.value); 
-  }
-
+  // history handling: ПЕРЕКЛЮЧАЕМСЯ НА window.goToHome из index.html
   window.addEventListener('popstate', (ev) => {
     const st = ev.state;
     if (!st || st.view === 'list') {
-      goToHome(); 
+      window.goToHome();
     } else if (st.view === 'about') {
-       // Повторно активируем логику "О приложении" из index.html
-       ABOUT_BTN.click(); 
+       document.getElementById('aboutBtn')?.click(); 
     } else if (st.view === 'model') {
       const key = st.modelKey;
       for (const b in aggregatedByBrand) {
         const found = aggregatedByBrand[b].find(x => `${x.brand}||${x.model}||${x.codename}` === key);
         if (found) { openModelPanel(found); return; }
       }
-      goToHome();
+      window.goToHome();
     } else if (st.view === 'detail') {
         const path = st.details_path;
-        // Находим агрегированную модель, чтобы иметь контекст (brand/model/cpu)
         const parsed = parseDetailsPath(path);
         const aggKey = `${parsed.brand}||${parsed.model}||${parsed.codename}`;
         const agg = aggregatedByBrand[parsed.brand]?.find(x => `${x.brand}||${x.model}||${parsed.codename}` === aggKey);
         
         openIssueDetail(path, agg || parsed, parsed.issue || '');
     } else {
-      goToHome();
+      window.goToHome();
     }
   });
   
@@ -495,11 +508,11 @@
       const hash = decodeURIComponent(location.hash.slice(1));
 
       if (hash === 'about') {
-          ABOUT_BTN.click(); // Имитируем клик по About
+          document.getElementById('aboutBtn')?.click(); 
       } else if (hash.startsWith('model-')) {
           const key = hash.replace(/^model-/, '');
           for (const b in aggregatedByBrand) {
-            const found = aggregatedByBrand[b].find(x => `${x.brand}||${x.model}||x.codename` === key);
+            const found = aggregatedByBrand[b].find(x => `${x.brand}||${x.model}||${x.codename}` === key);
             if (found) { openModelPanel(found); return; }
           }
       } else if (hash.startsWith('data/')) {
@@ -513,10 +526,12 @@
 
 
   BACK_BTN.addEventListener('click', () => history.back());
-  HOME_BTN?.addEventListener('click', goToHome); 
 
-  const onSearch = debounce((e) => renderList(e.target.value || ''), 160);
+  const onSearch = debounce((e) => window.renderList(e.target.value || ''), 160);
   SEARCH.addEventListener('input', onSearch);
+  
+  // Убеждаемся, что renderList доступен извне
+  window.renderList = window.renderList || function() {}; 
 
   // init
   async function init() {
@@ -537,7 +552,7 @@
       rawPhones = allFilePaths;
       aggregatePhones(rawPhones);
       renderBrandFilters();
-      renderList();
+      window.renderList();
       
       // Обработка хэша URL после полной загрузки списка
       handleInitialHash();

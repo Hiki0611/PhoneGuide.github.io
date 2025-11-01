@@ -24,7 +24,11 @@
 
   <main id="app" role="main">
     <div id="list" class="list" aria-live="polite"></div>
-    <section id="detail" class="detail hidden" aria-hidden="true"></section>
+    
+    <section id="detail" class="detail hidden" aria-hidden="true">
+      <div class="detail-content">
+        </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -52,26 +56,36 @@
       document.documentElement.style.opacity = 1;
     });
 
-    // about button
-    document.getElementById('aboutBtn').addEventListener('click', (e) => {
+    // logic to update UI state for "About" page
+    function showAboutPage() {
       const detail = document.getElementById('detail');
+      const detailContent = detail.querySelector('.detail-content');
       const list = document.getElementById('list');
+      const brandFilters = document.getElementById('brandFilters');
+      const search = document.getElementById('search');
       
-      // Управление активными кнопками в футере
-      e.currentTarget.classList.add('active');
-      document.getElementById('homeBtn')?.classList.remove('active');
+      // Update UI state
+      document.getElementById('aboutBtn').classList.add('active');
+      document.getElementById('homeBtn').classList.remove('active');
+      search.classList.add('hidden'); // Скрыть поиск
+      brandFilters.classList.add('hidden'); // Скрыть фильтры
       
       list.classList.add('hidden'); 
       detail.classList.remove('hidden');
       document.getElementById('backBtn').classList.remove('hidden');
-      detail.innerHTML = `
+
+      // Add content to the special detail-content block
+      detailContent.innerHTML = `
         <h2 class="glow-title">О приложении — PhoneGuide</h2>
         <p>PhoneGuide — набор инструкций и процедур для смартфонов (IMEI / FRP / DEAD). Контент — учебный/информационный. Используйте с осторожностью.</p>
+        <p>Система полностью автоматизирована, обновляется с помощью скрипта <code>upload.py</code>, который генерирует индекс файлов и использует GitHub API для развертывания.</p>
         <p>Связь в Telegram: <a href="https://t.me/ill_hack_you" target="_blank">@ill_hack_you</a></p>
       `;
       // Хеш для about
       history.pushState({ view: 'about' }, '', '#about');
-    });
+    }
+
+    document.getElementById('aboutBtn').addEventListener('click', showAboutPage);
 
     // Esc = back
     document.addEventListener('keydown', (e) => {
@@ -80,6 +94,29 @@
         if (!back.classList.contains('hidden')) back.click();
       }
     });
+
+    // Ensure the home button logic is accessible to script.js
+    window.goToHome = function() {
+        const detail = document.getElementById('detail');
+        const list = document.getElementById('list');
+        const brandFilters = document.getElementById('brandFilters');
+        const search = document.getElementById('search');
+        
+        detail.classList.add('hidden');
+        document.getElementById('backBtn').classList.add('hidden');
+        list.classList.remove('hidden');
+        
+        document.getElementById('homeBtn').classList.add('active');
+        document.getElementById('aboutBtn').classList.remove('active');
+        search.classList.remove('hidden'); // Показать поиск
+        brandFilters.classList.remove('hidden'); // Показать фильтры
+        
+        history.pushState({ view: 'list' }, '', window.location.pathname);
+        // Call renderList from script.js if it exists
+        if (typeof window.renderList === 'function') window.renderList(document.getElementById('search').value);
+    }
+    
+    document.getElementById('homeBtn').addEventListener('click', window.goToHome);
   </script>
 
 </body>
