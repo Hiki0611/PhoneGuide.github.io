@@ -1,0 +1,8 @@
+{
+  "brand": "Realme-C61-Note_60-note_60x-C63",
+  "model": "Realme note *",
+  "codename": "rmx3830",
+  "cpu": "spd",
+  "issue": "imei",
+  "instructions": "Android 14 uchun yechim\n\npandora tool-da rmx3830-ni tanlab imei yozamiz. IMEI yozilganidan kegin telefon bootloop bolip qoladi, shunda maxsus proshivkani flash qilamiz (NV_lite qismidan tashqari)\n\ntelefon yonadi va malumotlari tozzalanadi."
+}
