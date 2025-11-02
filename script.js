@@ -25,7 +25,7 @@
 
       const particles = [];
       // Высокая плотность для эффекта дождя
-      const PARTICLE_COUNT = Math.max(100, Math.floor((w * h) / 3000)); 
+      const PARTICLE_COUNT = Math.max(500, Math.floor((w * h) / 30000)); 
       const MAX_SPEED = 2; // Значительная скорость падения
       const BASE_ALPHA = 0.4; // Высокая базовая прозрачность
 
@@ -60,9 +60,9 @@
         ctx.fillRect(0, 0, w, h);
         
         for (let p of particles) {
-          p.y += p.vy * (dt / 16);
+          p.y += p.vy * (dt / 5);
           // Когда частица достигает дна, возвращаем её наверх с новой случайной позицией X
-          if (p.y > h + 10) { 
+          if (p.y > h + 50) { 
              p.y = -10;
              p.x = Math.random() * w; // Новая позиция по горизонтали
              p.vy = Math.random() * MAX_SPEED + 0.5;

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PhoneGuide — Инструкции по телефонам</title>
+  <title>PhoneGuide — Telefonlar uchun instruksiya</title>
   <link rel="stylesheet" href="style.css" />
   <meta name="theme-color" content="#071014" />
 </head>
@@ -14,9 +14,9 @@
   <div class="float-shape s2"></div>
 
   <header class="navbar">
-    <button id="backBtn" class="btn hidden" aria-label="Назад">←</button>
+    <button id="backBtn" class="btn hidden" aria-label="orqaga">←</button>
     <h1 class="title">PhoneGuide</h1>
-    <input id="search" type="search" placeholder="🔍 Поиск" autocomplete="off" />
+    <input id="search" type="search" placeholder="🔍 Qidiruv" autocomplete="off" />
   </header>
 
   <div id="brandFilters" class="brand-filters" aria-hidden="false" role="toolbar" aria-label="Фильтр по брендам">
@@ -33,13 +33,13 @@
 
   <footer class="footer">
     <div class="nav">
-      <button class="nav-btn active" id="homeBtn" aria-pressed="true">Главная</button>
-      <button class="nav-btn" id="aboutBtn">О приложении</button>
+      <button class="nav-btn active" id="homeBtn" aria-pressed="true">Asosiy</button>
+      <button class="nav-btn" id="aboutBtn">Dastur haqida</button>
     </div>
 
     <div class="footer-info">
       <div class="contact">
-        <span>Контакт (TG):</span>
+        <span>Kontakt uchun (TG):</span>
         <a href="https://t.me/ill_hack_you" target="_blank" rel="noopener noreferrer" id="tgLink">@ill_hack_you</a>
       </div>
       <div class="copyright">© PhoneGuide</div>
@@ -76,10 +76,9 @@
 
       // Add content to the special detail-content block
       detailContent.innerHTML = `
-        <h2 class="glow-title">О приложении — PhoneGuide</h2>
-        <p>PhoneGuide — набор инструкций и процедур для смартфонов (IMEI / FRP / DEAD). Контент — учебный/информационный. Используйте с осторожностью.</p>
-        <p>Система полностью автоматизирована, обновляется с помощью скрипта <code>upload.py</code>, который генерирует индекс файлов и использует GitHub API для развертывания.</p>
-        <p>Связь в Telegram: <a href="https://t.me/ill_hack_you" target="_blank">@ill_hack_you</a></p>
+        <h2 class="glow-title">Dastur haqida — PhoneGuide</h2>
+        <p>PhoneGuide — Telefon modellari uchun instruksiya jamlanmasi (IMEI / FRP / DEAD). Kontend faqat urganish yoki malumot olish uchun. Dasturni ishlatiyotgan ekansiz barcha harakatlarni uz zimmangizga olganingizni anglatadi.</p>
+        <p>Mening Telegram manzilim: <a href="https://t.me/ill_hack_you" target="_blank">@ill_hack_you</a></p>
       `;
       // Хеш для about
       history.pushState({ view: 'about' }, '', '#about');
