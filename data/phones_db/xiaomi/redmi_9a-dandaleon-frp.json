@@ -1,9 +1,0 @@
-{
-  "brand": "Xiaomi",
-  "series": "Redmi 9/A",
-  "model": "Redmi 9A",
-  "codename": "dandaleon",
-  "cpu": "MediaTek Helio G25",
-  "issue": "frp",
-  "instructions": "## Обход FRP для Xiaomi Redmi 9A\n\n**Метод A: Через Accessibility (Самый простой)**\n\n1.  На экране выбора Wi-Fi нажмите 'Add Network'.\n2.  В поле SSID введите любой текст и выделите его.\n3.  Появится меню, выберите иконку 'Share' (Поделиться).\n4.  Выберите 'Gmail' > 'Notification' > 'App Settings'.\n5.  Перейдите в 'Settings' > 'Manage Accounts' > 'Add Account' > 'Exchange'.\n6.  Нажмите кнопку 'Pattern' (Графический ключ) и установите новый ключ.\n7.  Вернитесь на главный экран настройки. Телефон запросит новый ключ (который вы только что установили), а затем предложит пропустить вход в Google Account.\n\n**Метод B: Через Fastboot (Требует разблокировки загрузчика):**\n\n1.  Переведите телефон в режим Fastboot.\n2.  Подключите к ПК и выполните команду:\n    `fastboot erase userdata`\n    `fastboot erase frp`\n    `fastboot reboot`"
-}
