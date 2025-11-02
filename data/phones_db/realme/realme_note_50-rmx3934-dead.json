@@ -1,8 +1,0 @@
-{
-  "brand": "realme",
-  "model": "realme Note 50",
-  "codename": "rmx3934",
-  "cpu": "UNISOC T612",
-  "issue": "DEAD",
-  "instructions": "1. Установите необходимые драйверы (Unisoc/Spreadtrum).\n2. Откройте программу Flash Tool (например, SPD ResearchDownload Tool).\n3. Загрузите нужный файл прошивки (.pac).\n4. Нажмите кнопку Start Downloading.\n5. Подключите телефон, удерживая кнопку Volume Down (или обе кнопки громкости, в зависимости от модели).\n6. Дождитесь завершения процесса."
-}
