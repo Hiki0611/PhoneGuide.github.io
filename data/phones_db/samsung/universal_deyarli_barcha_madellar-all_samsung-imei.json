@@ -1,0 +1,8 @@
+{
+  "brand": "samsung",
+  "model": "UNIVERSAL deyarli barcha madellar",
+  "codename": "all/samsung",
+  "cpu": "Exynox/MTK",
+  "issue": "imei",
+  "instructions": "Deyarli barcha rep boladigan samsung uchun instruksiya bir xil!\n\nNastroykaga kiramiz\nTelefon haqida/О телефоне -ga kiramiz\nDastur malumoti/Данные о ПО -ga kiramiz\nReliz raqami/номер сборки -ni 7-8 marta tez-tez bosamiz\nDasturchi sozlamalari/Параметри разработчика -dan OEM-lock, Zavod quldi yoki Завотская разблокировка -ni yoqamiz\nTelefonni uchirip + va - knopkasini bosib kampyyuterga ulaymiz\nDownload mode ga tushamiz, agarda 3 xil tanlov chiqsa + ni bosib turamiz hamda yozuv uzgarganidan keyin yana + ni bosib turamiz\nQaytadan Download Mode ga tushiramiz\nXohlagan ROOT file yozing (Magisk-DFT-AutoRoot)\nTelefon sbros boladi (agar sbros bulmasdan bootloop vosa uzingiz sbros qiling)\nDasturchi rejimini yoqib adb ni yoqing\nkampyuterga ulang\nChimera tool-ga kiring\nadb uchun telefondan ruxsat bering\nIMEI repair bulimida yangi IMEI yozing (telefon bir necha marta uchib yonadi)\nChimera tool -da Patch Certificate qiling\nreboot"
+}
