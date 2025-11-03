@@ -1,0 +1,8 @@
+{
+  "brand": "xiaomi",
+  "model": "Redmi 9t",
+  "codename": "Lime/Lemon",
+  "cpu": "QCom",
+  "issue": "imei",
+  "instructions": "miui V12.0.6.0 prosh qilamiz agar telefon uzi V12.0.6.0 versiyada bosa prosh shart emas\n\nDFT pro kerak boladi\n\nqcn read/backup qilib quyamiz\ntest pointda EFS ni uchiramiz\nagar telefon NV-data ga tushb recovery-ga kirip qolsa modem file ni yozamiz\ntelefonni yoqib adb va diagni yoqamiz\ndft-da dual IMEI yozamiz\nolip quygan qcn-ni yozamiz\nreboot"
+}
