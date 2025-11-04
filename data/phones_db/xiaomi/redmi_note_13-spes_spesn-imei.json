@@ -1,0 +1,8 @@
+{
+  "brand": "xiaomi",
+  "model": "Redmi note 13",
+  "codename": "spes/spesn",
+  "cpu": "Qcom",
+  "issue": "imei",
+  "instructions": "DFT pro kerak boladi\n\nmidiag tashlaymiz\ndiagni yoqamiz\nQCN backup\nRezistr ob tashlaymiz\nTest point-da EFS-ni uchiramiz\nIMEI yozamiz\nQCN restore qilamiz\nreboot"
+}
