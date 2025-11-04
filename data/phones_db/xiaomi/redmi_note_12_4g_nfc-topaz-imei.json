@@ -1,0 +1,8 @@
+{
+  "brand": "xiaomi",
+  "model": "Redmi Note 12 4G NFC",
+  "codename": "Topaz",
+  "cpu": "Qcom",
+  "issue": "imei",
+  "instructions": "HyperOS 1 yoki MIUI prosh qilamiz\n\nDiag rejimni yoqamiz\nQCN backup olamiz\nRezistr ob tashlaymiz\nTest point-da EFS ni uchiramiz\nDual IMEI yozamiz\nQCN backup-ni restore qilamiz\nreboot\n\n\n#################\nmabodo NV Data oshibkasi bilan recovery rejimga tushib qolsa FIX MODEM yozamiz\n#################"
+}
