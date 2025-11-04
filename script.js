@@ -244,7 +244,7 @@
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'brand-chip';
-    el.textContent = isAll ? 'Все' : text;
+    el.textContent = isAll ? 'Hammasi' : text;
     el.dataset.brand = isAll ? '__all' : text;
     el.setAttribute('aria-pressed', 'false');
     return el;
