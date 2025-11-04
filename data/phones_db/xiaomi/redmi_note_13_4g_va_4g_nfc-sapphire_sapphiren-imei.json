@@ -1,0 +1,8 @@
+{
+  "brand": "xiaomi",
+  "model": "Redmi Note 13 4G va 4G NFC",
+  "codename": "sapphire/sapphiren",
+  "cpu": "Qcom",
+  "issue": "imei",
+  "instructions": "Agar HyperOS 2 bosa HyperOS 1 prosh qilamiz\n\nDFT pro kerak boladi\n\nMIUI yoki HyperOS1 bosa diagni yoqamiz\nQCN-backup ovolamiz\nTest point orqali EFS-ni uchiramiz\ndiagni qayta yoqib IMEI yozamiz\nbackup olingan QCN-ni yozamiz\nreboot"
+}

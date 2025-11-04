@@ -226,7 +226,7 @@
     if (!BRAND_FILTERS) return;
     BRAND_FILTERS.innerHTML = '';
     const brands = Object.keys(aggregatedByBrand).sort((a,b)=> a.localeCompare(b,'ru',{sensitivity:'base'}));
-    const allChip = makeChip('Все', true);
+    const allChip = makeChip('Hammasi', true);
     allChip.addEventListener('click', () => { activeBrand = null; updateActiveChips(); window.renderList(SEARCH.value || ''); });
     BRAND_FILTERS.appendChild(allChip);
     brands.forEach(brand => {
