@@ -1,0 +1,8 @@
+{
+  "brand": "xiaomi",
+  "model": "Redmi 13C",
+  "codename": "Gale/Gust",
+  "cpu": "MTK",
+  "issue": "imei",
+  "instructions": "miui bo'sa hyper 1 yoki hyper 2 ga obnovleniya qilamiz\n\nhyper 1 bosa DFT da Patch bl lock orqali IMEI yozamiz\n\nhyper 2 bosa DFT da Patch bl lock orqali IMEI yozamiz keyin partition manager orqali md (modem) fileni yozamiz"
+}

@@ -1,0 +1,8 @@
+{
+  "brand": "xiaomi",
+  "model": "Realme note 50",
+  "codename": "rmx3834",
+  "cpu": "SPD",
+  "issue": "imei",
+  "instructions": "Pandora tool orqali IMEI yozamiz\n\nagar IMEI joyi NULL yoki Unknown bosa FIX ni restore qilamiz"
+}
