@@ -422,7 +422,7 @@
       const detail = {
         details_path,
         brand: data.brand || model.brand, model: data.model || model.model,
-        codename: data.codename || model.codename, cpu: data.cpu || model.cpu || 'Unknown', 
+        codename: data.codename || model.codename, cpu: data.cpu || model.cpu || 'Kursatilmagan', 
         issue: data.issue || issue, instructions: data.instructions || data.text || 'Инструкции не найдены',
         raw: data
       };
