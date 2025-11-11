@@ -2,11 +2,24 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
   <title>PhoneGuide — Telefonlar uchun instruksiya</title>
-  <link rel="stylesheet" href="style.css" />
-  <meta name="theme-color" content="#071014" />
+  <meta name="description" content="Telefon modellari uchun to'liq instruksiya jamlanmasi: IMEI, FRP, DEAD. Barcha brendlar va modellar." />
+  <meta name="keywords" content="phone guide, imei, frp, dead, telefon, instruksiya" />
 
+  <!-- Progressive Web App -->
+  <meta name="theme-color" content="#060709" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="PhoneGuide — Telefon instruksiyalari" />
+  <meta property="og:description" content="Barcha telefon modellari uchun batafsil instruksiyalar" />
+  <meta property="og:type" content="website" />
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
 </head>
 <body>
 
@@ -15,35 +28,75 @@
   <div class="float-shape s2"></div>
 
   <header class="navbar">
-    <button id="backBtn" class="btn hidden" aria-label="orqaga">←</button>
-    <h1 class="title">PhoneGuide</h1>
-    <input id="search" type="search" placeholder="🔍 Qidiruv" autocomplete="off" />
+    <button id="backBtn" class="btn hidden" aria-label="orqaga" title="Orqaga qaytish">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <h1 class="title">
+      <span class="logo-bracket">[</span>PhoneGuide<span class="logo-bracket">]</span>
+    </h1>
+    <div class="search-wrapper">
+      <input id="search" type="search" placeholder="Qidiruv..." autocomplete="off" aria-label="Telefon qidirish" />
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+    </div>
   </header>
 
   <div id="brandFilters" class="brand-filters" aria-hidden="false" role="toolbar" aria-label="Фильтр по брендам">
     </div>
 
+  <!-- Loading Indicator -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+    </div>
+    <p class="loading-text">Yuklanmoqda...</p>
+  </div>
+
   <main id="app" role="main">
     <div id="list" class="list" aria-live="polite"></div>
-    
+
     <section id="detail" class="detail hidden" aria-hidden="true">
-      <div class="detail-content">
-        </div>
+      <div class="detail-content"></div>
     </section>
   </main>
 
   <footer class="footer">
     <div class="nav">
-      <button class="nav-btn active" id="homeBtn" aria-pressed="true">Asosiy</button>
-      <button class="nav-btn" id="aboutBtn">Dastur haqida</button>
+      <button class="nav-btn active" id="homeBtn" aria-pressed="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Asosiy</span>
+      </button>
+      <button class="nav-btn" id="aboutBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 16v-4M12 8h.01"></path>
+        </svg>
+        <span>Haqida</span>
+      </button>
     </div>
 
     <div class="footer-info">
       <div class="contact">
-        <span>Kontakt uchun (TG):</span>
+        <svg class="tg-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+        </svg>
+        <span>Kontakt:</span>
         <a href="https://t.me/ill_hack_you" target="_blank" rel="noopener noreferrer" id="tgLink">@ill_hack_you</a>
       </div>
-      <div class="copyright">© PhoneGuide</div>
+      <div class="copyright">
+        <span class="copyright-text">© 2025 PhoneGuide</span>
+        <span class="copyright-dot">•</span>
+        <span class="version">v1.0</span>
+      </div>
     </div>
   </footer>
 
@@ -121,7 +174,7 @@
     
     document.getElementById('homeBtn').addEventListener('click', window.goToHome);
   </script>
-  <script src="hack.js"></script>
+  <script src="info.js"></script>
 
 </body>
 </html>

@@ -24,10 +24,10 @@
       ctx.scale(DPR, DPR);
 
       const particles = [];
-      // Высокая плотность для эффекта дождя
-      const PARTICLE_COUNT = Math.max(500, Math.floor((w * h) / 30000)); 
-      const MAX_SPEED = 2; // Значительная скорость падения
-      const BASE_ALPHA = 0.4; // Высокая базовая прозрачность
+      // Оптимизированная плотность для эффекта "Матрицы"
+      const PARTICLE_COUNT = Math.max(300, Math.min(600, Math.floor((w * h) / 25000)));
+      const MAX_SPEED = 2.5; // Увеличенная скорость падения
+      const BASE_ALPHA = 0.5; // Высокая базовая прозрачность для яркого эффекта
 
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         particles.push({
@@ -42,12 +42,14 @@
 
       function shouldThrottle() {
         const ua = navigator.userAgent || '';
-        return /Android|iPhone|iPad|Mobi/i.test(ua);
+        const isMobile = /Android|iPhone|iPad|Mobi/i.test(ua);
+        const isLowEnd = navigator.hardwareConcurrency <= 4;
+        return isMobile || isLowEnd;
       }
       if (shouldThrottle()) {
-        // Уменьшение плотности и скорости на мобильных
-        for (let p of particles) { p.vy *= 0.5; }
-        if (w < 600) particles.splice(Math.floor(particles.length / 2));
+        // Оптимизация для мобильных и слабых устройств
+        for (let p of particles) { p.vy *= 0.6; }
+        if (w < 768) particles.splice(Math.floor(particles.length / 2.5));
       }
 
       let last = performance.now();
@@ -116,20 +118,36 @@
      --------------------------- */
   // ... (Остальной код приложения остается без изменений)
   const BACK_BTN = document.getElementById('backBtn');
-  const HOME_BTN = document.getElementById('homeBtn'); 
-  const ABOUT_BTN = document.getElementById('aboutBtn'); 
+  const HOME_BTN = document.getElementById('homeBtn');
+  const ABOUT_BTN = document.getElementById('aboutBtn');
   const LIST_EL = document.getElementById('list');
   const DETAIL_EL = document.getElementById('detail');
   const DETAIL_CONTENT = document.querySelector('.detail-content');
   const SEARCH = document.getElementById('search');
   const BRAND_FILTERS = document.getElementById('brandFilters');
+  const LOADING_OVERLAY = document.getElementById('loadingOverlay');
   const TG_COPY_BTN_ID = 'tgCopyBtn';
   const TG_HANDLE = '@ill_hack_you';
   const STORAGE_KEY = 'phoneguide_details_cache_v1';
-  let rawPhones = []; 
+  let rawPhones = [];
   let aggregatedByBrand = {};
   let activeBrand = null;
   const detailsCache = new Map();
+
+  // Loading utility functions
+  function showLoading(text = 'Yuklanmoqda...') {
+    if (LOADING_OVERLAY) {
+      const loadingText = LOADING_OVERLAY.querySelector('.loading-text');
+      if (loadingText) loadingText.textContent = text;
+      LOADING_OVERLAY.classList.remove('hidden');
+    }
+  }
+
+  function hideLoading() {
+    if (LOADING_OVERLAY) {
+      setTimeout(() => LOADING_OVERLAY.classList.add('hidden'), 200);
+    }
+  }
 
   // load small cache
   try {
@@ -204,7 +222,7 @@
       if (!aggregatedByBrand[brand][key]) {
         aggregatedByBrand[brand][key] = {
           brand, model, codename,
-          cpu: 'Unknown', 
+          cpu: 'CPU ?', 
           series: '',
           issues: {}
         };
@@ -404,8 +422,9 @@
 
   // open specific issue detail (fetch on demand)
   async function openIssueDetail(details_path, model, issue) {
-    DETAIL_CONTENT.innerHTML = `<div class="center">Загрузка инструкции ${issue.toUpperCase()}…</div>`;
-    
+    showLoading(`Instruksiya yuklanmoqda: ${issue.toUpperCase()}`);
+    DETAIL_CONTENT.innerHTML = `<div class="center">Yuklanmoqda...</div>`;
+
     // UI state management (hide non-essential elements)
     SEARCH.classList.add('hidden');
     BRAND_FILTERS.classList.add('hidden');
@@ -415,6 +434,7 @@
       if (detailsCache.has(cacheKey)) {
         const cachedDetail = detailsCache.get(cacheKey);
         model.cpu = cachedDetail.cpu || model.cpu;
+        hideLoading();
         renderDetail(cachedDetail, model, issue);
         return;
       }
@@ -422,17 +442,19 @@
       const detail = {
         details_path,
         brand: data.brand || model.brand, model: data.model || model.model,
-        codename: data.codename || model.codename, cpu: data.cpu || model.cpu || 'Kursatilmagan', 
+        codename: data.codename || model.codename, cpu: data.cpu || model.cpu || 'Kursatilmagan',
         issue: data.issue || issue, instructions: data.instructions || data.text || 'Инструкции не найдены',
         raw: data
       };
       model.cpu = detail.cpu;
       detailsCache.set(cacheKey, detail);
       persistCache();
+      hideLoading();
       renderDetail(detail, model, issue);
     } catch (err) {
       console.error('openIssueDetail error', err);
-      DETAIL_CONTENT.innerHTML = `<div class="center">Не удалось загрузить детали. Проверь структуру файлов или путь: ${escapeHtml(details_path)}</div>`;
+      hideLoading();
+      DETAIL_CONTENT.innerHTML = `<div class="center">Ma'lumot yuklanmadi. Fayl yo'lini tekshiring: ${escapeHtml(details_path)}</div>`;
     }
   }
 
@@ -539,34 +561,41 @@
 
   // init
   async function init() {
-    LIST_EL.innerHTML = '<div class="center">Загрузка базы телефонов (автоматически)...</div>';
-    
+    showLoading('Bazasi yuklanmoqda...');
+    LIST_EL.innerHTML = '<div class="center">Yuklanmoqda...</div>';
+
     // ----------------------------------------------------------------------------------
     // Загрузка индекса из сгенерированного list.json
     // ----------------------------------------------------------------------------------
-    const FILE_LIST_PATH = 'list.json'; 
-    
+    const FILE_LIST_PATH = 'list.json';
+
     try {
       const allFilePaths = await fetchJson(FILE_LIST_PATH, 15000);
-      
+
       if (!Array.isArray(allFilePaths)) {
-        throw new Error(`${FILE_LIST_PATH} не является массивом путей.`);
+        throw new Error(`${FILE_LIST_PATH} massiv emas.`);
       }
-      
+
       rawPhones = allFilePaths;
       aggregatePhones(rawPhones);
       renderBrandFilters();
-      window.renderList();
-      
-      // Обработка хэша URL после полной загрузки списка
-      handleInitialHash();
+
+      // Add smooth reveal animation
+      setTimeout(() => {
+        hideLoading();
+        window.renderList();
+        // Обработка хэша URL после полной загрузки списка
+        handleInitialHash();
+      }, 300);
 
     } catch (err) {
       console.error(err);
-      LIST_EL.innerHTML = `<div class="center">Ошибка загрузки базы: Проверьте, что файл ${FILE_LIST_PATH} сгенерирован и загружен на сервер. ${escapeHtml(err.message || '')}</div>`;
+      hideLoading();
+      LIST_EL.innerHTML = `<div class="center">Xatolik: ${FILE_LIST_PATH} faylini tekshiring. ${escapeHtml(err.message || '')}</div>`;
     }
   }
 
+  // Start initialization
   init();
 
 })();
